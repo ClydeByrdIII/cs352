@@ -1,0 +1,453 @@
+/* THIS IS THE TEMPLATE FOR Parser.jj and ParserAST.jj. PLEASE FILL IN AT LEAST
+ * ALL INSTANCES OF THE COMMENT "FILLIN", AND REMOVE THIS HEADER COMMENT. */
+options {
+  JAVA_UNICODE_ESCAPE = true;
+  STATIC = false;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+}
+
+PARSER_BEGIN(ParserAST)
+    package edu.purdue.cs352.minijava.parser;
+    import edu.purdue.cs352.minijava.ast.*;
+    import java.util.*;
+
+    public class ParserAST {
+        public static void main(String[] args) {
+            ParserAST parser;
+
+            if (args.length != 1) {
+                System.out.println("Use: mjparse-ast <input file>");
+                return;
+            }
+
+            try {
+                parser = new ParserAST(new java.io.FileInputStream(args[0]));
+            } catch (java.io.FileNotFoundException ex) {
+                System.out.println("File " + args[0] + " not found.");
+                return;
+            }
+
+            try {
+                parser.Program();
+            } catch (ParseException ex) {
+                System.out.println(ex.getMessage());
+                return;
+            }
+        }
+    }
+PARSER_END(ParserAST)
+
+// Lexical definitions
+
+// FILLIN: Insert your complete lexer here
+// Whitespace
+SKIP :
+{
+    " " 
+    | "\t"
+    | "\n"
+    | "\r"
+    | "\f"
+
+}
+
+// Comments
+SKIP :
+{
+    < "//" (~["\n"])* "\n" >
+|   < "/*" (~["*"] | (["*"])+ ~["*","/"])* (["*"])+ "/" >
+}
+// MiniJava keywords
+TOKEN :
+{
+    < KW_CLASS: "class" >
+|   < KW_PUBLIC: "public" >   
+|   < KW_STATIC: "static" >
+|   < KW_VOID: "void" >
+|   < KW_MAIN: "main" >
+|   < KW_STRING: "String" >
+|   < KW_EXTENDS: "extends" >
+|   < KW_RETURN: "return" >
+|   < KW_INT: "int" >
+|   < KW_BOOLEAN: "boolean" >
+|   < KW_IF: "if" >
+|   < KW_ELSE: "else" >
+|   < KW_WHILE: "while" >
+|   < KW_TRUE: "true" >
+|   < KW_FALSE: "false" >
+|   < KW_THIS: "this" >
+|   < KW_NEW: "new" >
+|   < KW_SYSPRNT: "System.out.println" >
+
+}
+
+// MiniJava symbols
+TOKEN :
+{
+    < SYM_LBRACE: "{" >
+|   < SYM_RBRACE: "}" >
+|   < SYM_LPAREN: "(" >
+|   < SYM_RPAREN: ")" >
+|   < SYM_LBRACK: "[" >
+|   < SYM_RBRACK: "]" >
+|   < SYM_SEMICOL: ";" >
+|   < SYM_EQ: "=" >
+|   < SYM_LOGAND: "&&" >
+|   < SYM_LOGOR: "||" >
+|   < SYM_LESS: "<" >
+|   < SYM_LESSEQ: "<=" >
+|   < SYM_EQEQ: "==" >
+|   < SYM_NOTEQ: "!=" >
+|   < SYM_GREAT: ">" >
+|   < SYM_GREATEQ: ">=" >
+|   < SYM_PLUS: "+" >
+|   < SYM_MINUS: "-" >
+|   < SYM_MULTIL: "*" >
+|   < SYM_DIVIDE: "/" >
+|   < SYM_MOD: "%" >
+|   < SYM_NOT: "!" >
+|   < SYM_DOT: "." >
+|   < SYM_COMMA: "," >
+
+}
+
+// Identifiers
+TOKEN :
+{
+    < IDENTIFIER: (["A" - "Z", "a" - "z", "_"]) (["A" - "Z", "a" - "z", "0"-"9","_"])* >
+}
+
+// Integer literals
+TOKEN :
+{
+    < INT_LITERAL: (["0"-"9"])+ >
+}
+
+/* The following is a simple grammar that will allow you to test the generated
+ * lexer. */
+List<Token> TokenList() :
+{
+    Token t;
+    List<Token> tl = new ArrayList<Token>();
+}
+{
+
+    (
+        t = Token()
+        { tl.add(t); }
+    )*
+    <EOF>
+    { return tl; }
+}
+
+Token Token():
+{}
+{
+    (
+    "class"
+|   "public"   
+|   "static" 
+|   "void" 
+|   "main" 
+|   "String" 
+|   "extends" 
+|   "return" 
+|   "int" 
+|   "boolean" 
+|   "if" 
+|   "else" 
+|   "while" 
+|   "true" 
+|   "false" 
+|   "this" 
+|   "new" 
+|   "System.out.println" 
+|   "{" 
+|   "}" 
+|   "(" 
+|   ")" 
+|   "[" 
+|   "]" 
+|   ";" 
+|   "=" 
+|   "&&" 
+|   "||" 
+|   "<" 
+|   "<=" 
+|   "==" 
+|   "!=" 
+|   ">" 
+|   ">=" 
+|   "+" 
+|   "-" 
+|   "*" 
+|   "/" 
+|   "%" 
+|   "!" 
+|   "." 
+|   ","  
+|   <IDENTIFIER>
+|   <INT_LITERAL>
+    )
+    { return token; }
+}
+
+// Grammar
+Program Program():
+{
+    Main main;
+    Token tok;
+    List<ClassDecl> cds = new ArrayList<ClassDecl>();
+    ClassDecl cd;
+}
+{
+    main = MainClass() ( cd = ClassDeclaration() { cds.add(cd); } )* <EOF>
+    { return new Program(token, main, cds); }
+}
+
+Main MainClass():
+{
+    Statement state;
+    Token tok;
+}
+{
+    "class" tok = Identifier() "{" "public" "static" "void" "main" "(" "String" "[" "]" Identifier() ")" "{" state = Statement() "}" "}"
+    { return new Main(tok, state); }
+}
+
+ClassDecl ClassDeclaration():
+{
+    List<VarDecl> fields = new ArrayList<VarDecl>();
+    VarDecl field;
+    List<MethodDecl> methods = new ArrayList<MethodDecl>();
+    MethodDecl method;
+    Token tok, eggstends = null;
+    String eggs = null;
+}
+{
+    "class" tok = Identifier() ( "extends" eggstends = Identifier() )? "{" ( field = VarDeclaration() {fields.add(field); })* ( method = MethodDeclaration() {methods.add(method);} )* "}"    
+    {   
+        if(eggstends != null) 
+            eggs = eggstends.toString();
+        return new ClassDecl(tok, tok.toString() , eggs, fields, methods); }
+}
+
+VarDecl VarDeclaration(): 
+{
+    Type type;
+    Token tok;
+}
+{
+    type = Type() tok = Identifier() ";"
+    { return new VarDecl(tok, type, tok.toString()); }
+}
+
+MethodDecl MethodDeclaration():
+{
+    Type retType, args;
+    List<Parameter> parameters = new ArrayList<Parameter>();
+    List<VarDecl> vds = new ArrayList<VarDecl>();
+    List<Statement> body = new ArrayList<Statement>();
+    Exp retExp;
+    Token tok, argsTok;
+    Statement stat;
+    VarDecl vd;
+
+}
+{
+    "public" retType = Type() tok = Identifier() "(" ( args = Type() argsTok = Identifier() { parameters.add(new Parameter(argsTok, args, argsTok.image)); }
+        ( "," args = Type() argsTok = Identifier() { parameters.add(new Parameter(argsTok, args, argsTok.image));} )* )? 
+        ")"  "{" ( LOOKAHEAD(2) vd = VarDeclaration() { vds.add(vd); } )* 
+            ( stat = Statement() { body.add(stat); } )* 
+            "return" retExp = Expression() ";" 
+        "}"
+    { return new MethodDecl(tok, retType, tok.toString(), parameters, vds, body, retExp); }
+}
+
+Type Type():
+{ 
+    Token tok;
+}
+{
+      "int" ("[" "]" { return new TypeIntArray(token); })? { return new TypeInt(token); } // super unsure about KW_INT for both array and int
+|     "boolean" { return new TypeBoolean(token); }
+|     Identifier() { return new Type(token, token.toString()); }
+}
+
+Statement Statement():
+{
+    List<Statement> body = new ArrayList<Statement>();
+    Statement stat;
+    Exp condition;
+    Statement ifPart, elsePart = null;
+}
+{
+    "{" ( stat = Statement() { body.add(stat); } )* "}" { return new BlockStatement(token, body); }
+|   "if" "(" condition = Expression() ")" ifPart = Statement() ( LOOKAHEAD(2) "else" elsePart = Statement() )? { return new IfStatement(token, condition, ifPart, elsePart); }
+|     "while" "(" condition = Expression() ")" stat = Statement() { return new WhileStatement(token, condition, stat); }
+|     "System.out.println" "(" condition = Expression() ")" ";" { return new PrintStatement(token, condition); }
+|     condition = Expression() ";" { return new ExpStatement(token, condition); }
+}
+
+Exp Expression():
+{ Exp expr; }
+{
+   expr = AssignExpr() { return expr; }
+}
+
+Exp AssignExpr():
+{
+   Exp target, value;
+}
+{
+    target  = LogicOp() ( "=" value = AssignExpr() { return new AssignExp(token, target, value); } )?
+    { return target; }
+}
+
+Exp LogicOp():
+{
+    Exp left; 
+}
+{
+    left = CmpOp() (left = LogicOpP(left))*
+    { return left; }
+    
+}
+
+Exp LogicOpP(Exp left):
+{
+    Exp right;
+    Token tok;
+}
+{
+     ( tok = <SYM_LOGAND> | tok = <SYM_LOGOR> ) right = CmpOp() 
+     {  return new BinaryExp(left, tok, right); } 
+}
+
+Exp CmpOp():
+{ 
+    Exp left;
+}
+{
+    left = AddOp() (left = CmpOpP(left))*
+
+    { 
+      
+        return left;
+    }
+}
+Exp CmpOpP(Exp left):
+{
+    Exp right;
+    Token tok;
+}
+{
+   (  tok=<SYM_LESS> |  tok=<SYM_LESSEQ> |  tok=<SYM_EQEQ> |  tok=<SYM_NOTEQ> |  tok=<SYM_GREAT> |  tok=<SYM_GREATEQ> ) right = AddOp()
+        { return new BinaryExp(left, tok, right); }  
+}
+
+Exp AddOp():
+{
+    Exp left, right;
+    Token tok;
+}
+{
+    left = MulOp() (left = AddOpP(left))*
+
+    { 
+       return left; 
+    }
+}
+
+Exp AddOpP(Exp left):
+{
+    Exp right;
+    Token tok;
+}
+{
+    ( tok = <SYM_PLUS> | tok = <SYM_MINUS> ) right = MulOp() 
+    {    return new BinaryExp(left, tok, right); }
+
+}
+
+Exp MulOp():
+{
+    Exp left, right;
+    Token tok;
+}
+{
+    left = UnaryOp() (left = MulOpP(left))*
+    
+    { 
+        return left;
+    }
+}
+
+Exp MulOpP(Exp left):
+{
+    Exp right;
+    Token tok;
+}
+{
+    ( tok = <SYM_MULTIL> | tok = <SYM_DIVIDE> | tok = <SYM_MOD> ) right = UnaryOp() 
+    { 
+        return new BinaryExp(left, tok, right); 
+    } 
+    
+  
+}
+
+Exp UnaryOp():
+{
+    Exp left;
+}
+{
+    "!" left = UnaryOp() { return new NotExp(token, left); } 
+    | left = PostfixOp() {return left; }
+
+}
+
+Exp PostfixOp():
+{
+    Exp left;
+}
+{
+    left = PrimaryExp() ( left = PostfixOpP(left))* 
+
+    { return left; }
+}
+
+Exp PostfixOpP(Exp left):
+{
+    Exp index, arg;
+    List<Exp> arguments = new ArrayList<Exp>();
+    Token tok;
+}
+{
+
+        ("[" index = Expression() "]") { return new IndexExp(token, left, index ); } 
+        | ("." tok = Identifier() ("(" ( arg = Expression() {arguments.add(arg); }( "," arg = Expression() { arguments.add(arg); })* )? ")" { return new CallExp(token,left,tok.toString(), arguments); })*
+        { return new MemberExp(token,left, tok.toString()); }) 
+}
+Exp PrimaryExp():
+{
+    Exp size;
+    Token tok = null;
+}
+{
+    tok = <INT_LITERAL> { return new IntLiteralExp(token, Integer.parseInt(token.toString()));}
+|   "true" { return new BooleanLiteralExp(token, true); }
+|   "false" { return new BooleanLiteralExp(token, false); }
+|   Identifier() { return new VarExp(token, token.toString());}
+|   "this" { return new ThisExp(token); }
+|   "new" ("int" "[" size = Expression() "]" { return new NewIntArrayExp(token, size); }| tok = Identifier() "(" ")") { return new NewObjectExp(tok, tok.toString()); }
+|   "(" size = Expression() ")" { return size; }
+}
+
+Token Identifier():
+{}
+{
+    <IDENTIFIER>
+    { return token; }
+}

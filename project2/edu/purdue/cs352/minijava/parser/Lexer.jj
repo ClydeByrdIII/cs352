@@ -1,0 +1,197 @@
+/* THIS IS THE TEMPLATE FOR Lexer.jj. PLEASE FILL IN AT LEAST ALL INSTANCES OF
+ * THE COMMENT "FILLIN", AND REMOVE THIS HEADER COMMENT. */
+
+options {
+  JAVA_UNICODE_ESCAPE = true;
+  STATIC = false;
+}
+
+PARSER_BEGIN(Lexer)
+    package edu.purdue.cs352.minijava.parser;
+
+    import java.util.*;
+
+    public class Lexer {
+        public static void main(String[] args) {
+            Lexer lexer;
+            List<Token> tl;
+
+            if (args.length != 1) {
+                System.out.println("Use: Lexer <input file>");
+                return;
+            }
+
+            try {
+                lexer = new Lexer(new java.io.FileInputStream(args[0]));
+            } catch (java.io.FileNotFoundException ex) {
+                System.out.println("File " + args[0] + " not found.");
+                return;
+            }
+
+            try {
+                tl = lexer.TokenList();
+            } catch (ParseException ex) {
+                System.out.println(ex.getMessage());
+                return;
+            }
+
+            for (Token tok : tl) {
+                System.out.println(tok);
+            }
+        }
+    }
+PARSER_END(Lexer)
+
+// Lexical definitions
+
+// Whitespace
+SKIP :
+{
+    " " 
+    | "\t"
+    | "\n"
+    | "\r"
+    | "\f"
+
+}
+
+// Comments
+SKIP :
+{
+    < "//" (~["\n"])* "\n" >
+|   < "/*" (~["*"] | (["*"])+ ~["*","/"])* (["*"])+ "/" >
+}
+// MiniJava keywords
+TOKEN :
+{
+    < KW_CLASS: "class" >
+|   < KW_PUBLIC: "public" >   
+|   < KW_STATIC: "static" >
+|   < KW_VOID: "void" >
+|   < KW_MAIN: "main" >
+|   < KW_STRING: "String" >
+|   < KW_EXTENDS: "extends" >
+|   < KW_RETURN: "return" >
+|   < KW_INT: "int" >
+|   < KW_BOOLEAN: "boolean" >
+|   < KW_IF: "if" >
+|   < KW_ELSE: "else" >
+|   < KW_WHILE: "while" >
+|   < KW_TRUE: "true" >
+|   < KW_FALSE: "false" >
+|   < KW_THIS: "this" >
+|   < KW_NEW: "new" >
+|   < KW_SYSPRNT: "System.out.println" >
+
+}
+
+// MiniJava symbols
+TOKEN :
+{
+    < SYM_LBRACE: "{" >
+|   < SYM_RBRACE: "}" >
+|   < SYM_LPAREN: "(" >
+|   < SYM_RPAREN: ")" >
+|   < SYM_LBRACK: "[" >
+|   < SYM_RBRACK: "]" >
+|   < SYM_SEMICOL: ";" >
+|   < SYM_EQ: "=" >
+|   < SYM_LOGAND: "&&" >
+|   < SYM_LOGOR: "||" >
+|   < SYM_LESS: "<" >
+|   < SYM_LESSEQ: "<=" >
+|   < SYM_EQEQ: "==" >
+|   < SYM_NOTEQ: "!=" >
+|   < SYM_GREAT: ">" >
+|   < SYM_GREATEQ: ">=" >
+|   < SYM_PLUS: "+" >
+|   < SYM_MINUS: "-" >
+|   < SYM_MULTIL: "*" >
+|   < SYM_DIVIDE: "/" >
+|   < SYM_MOD: "%" >
+|   < SYM_NOT: "!" >
+|   < SYM_DOT: "." >
+|   < SYM_COMMA: "," >
+
+}
+
+// Identifiers
+TOKEN :
+{
+    < IDENTIFIER: (["A" - "Z", "a" - "z", "_"]) (["A" - "Z", "a" - "z", "0"-"9","_"])* >
+}
+
+// Integer literals
+TOKEN :
+{
+    < INT_LITERAL: (["0"-"9"])+ >
+}
+
+/* The following is a simple grammar that will allow you to test the generated
+ * lexer. */
+List<Token> TokenList() :
+{
+    Token t;
+    List<Token> tl = new ArrayList<Token>();
+}
+{
+
+    (
+        t = Token()
+        { tl.add(t); }
+    )*
+    <EOF>
+    { return tl; }
+}
+
+Token Token():
+{}
+{
+    (
+    "class"
+|   "public"   
+|   "static" 
+|   "void" 
+|   "main" 
+|   "String" 
+|   "extends" 
+|   "return" 
+|   "int" 
+|   "boolean" 
+|   "if" 
+|   "else" 
+|   "while" 
+|   "true" 
+|   "false" 
+|   "this" 
+|   "new" 
+|   "System.out.println" 
+|   "{" 
+|   "}" 
+|   "(" 
+|   ")" 
+|   "[" 
+|   "]" 
+|   ";" 
+|   "=" 
+|   "&&" 
+|   "||" 
+|   "<" 
+|   "<=" 
+|   "==" 
+|   "!=" 
+|   ">" 
+|   ">=" 
+|   "+" 
+|   "-" 
+|   "*" 
+|   "/" 
+|   "%" 
+|   "!" 
+|   "." 
+|   ","  
+|   <IDENTIFIER>
+|   <INT_LITERAL>
+    )
+    { return token; }
+}
