@@ -112,11 +112,16 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
             // ...
             System.out.println("AssignExp, VarExp:" + ((VarExp)target).getName());
             String name = ((VarExp)target).getName();
-            left = (SSAStatement)visit(value);
+            
             if(scope.get(name) == null) {
                 // then it's a global object, do memberAssg
-                ret = new SSAStatement(exp, SSAStatement.Op.MemberAssg, (SSAStatement)visit(target), left, name);
+                ThisExp thiz = new ThisExp(null);
+                MemberExp mem = new MemberExp(null, thiz, name);
+                AssignExp next = new AssignExp(null, mem, value);
+                return (SSAStatement)visit(next);
+                //ret = new SSAStatement(exp, SSAStatement.Op.MemberAssg, (SSAStatement)visit(target), left, name);
             } else {
+                left = (SSAStatement)visit(value);
                 ret = new SSAStatement(exp, SSAStatement.Op.VarAssg, left, null, name);
                 scope.put(name, ret);
                 System.out.println("AssignExp, VarExp Assigned:" + name);
@@ -275,7 +280,7 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         SSAStatement ret, left;
         String label, done;
         label = "lif_" + id + "_else";
-        done = "lif_" + id++ + "_done" ;
+        done = "lif_" + (id++) + "_done" ;
         left = (SSAStatement)visit(node.getCondition());
         System.out.println("Done visiting condition");
         Statement ifpart = node.getIfPart();
@@ -349,7 +354,7 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
             for(Map.Entry<String, SSAStatement> entry : ifHash.entrySet()) {
                 System.out.println("Key:" + entry.getKey() + ", Value:"+ ((SSAStatement)entry.getValue()).getIndex());
 
-                if(ifHash.containsKey(entry.getKey())) {
+                if(original.containsKey(entry.getKey())) {
 
                     SSAStatement old = (SSAStatement)original.get(entry.getKey());
                     SSAStatement newer = (SSAStatement)entry.getValue();
@@ -467,28 +472,107 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         ret = (SSAStatement)scope.get(node.getName());
         if(ret == null){
             // member variable, call a this and add to the body
-            ret = new SSAStatement(node, SSAStatement.Op.This);
-            body.add(ret);
-           
+
+            ThisExp thiz = new ThisExp(node.getToken());
+            MemberExp mem = new MemberExp(node.getToken(), thiz, node.getName());
+            ret = (SSAStatement)visit(mem);
+
+            //body.add(ret);
+
         }
         return ret; 
     }
     @Override public Object visit(WhileStatement node) {
         System.out.println("WhileStatement");
-        SSAStatement ret = null;
+        SSAStatement ret, condition;
+        Exp cond;
+        Statement whileBody;
+        Map<String, SSAStatement> original, postBody, postWhile, postConditon;
+        String start, done;
+        start = "lwhile_" + id + "_start";
+        done = "lwhile_" + (id++) + "_done";
+        cond = node.getCondition();
+        whileBody = node.getBody();
+
+        // make start label if true
+
+        ret = new SSAStatement(node, SSAStatement.Op.Label, start);
+        body.add(ret);
+        // save original scope; pre while
+        original = new HashMap<String, SSAStatement>(scope);
+
+        // eval condition
+        condition = (SSAStatement)visit(cond);
+        // save scope post condition scope
+        postConditon = new HashMap<String, SSAStatement>(scope);
+
+
+        // Nbranch if false to done
+        ret = new SSAStatement(node, SSAStatement.Op.NBranch, condition, null, done);
+        body.add(ret);
+        // else execute statments; Save scope after post Body
+        ret = (SSAStatement)visit(whileBody);
+        postBody= new HashMap<String, SSAStatement>(scope);
+
+        // go back to start
+        ret = new SSAStatement(node, SSAStatement.Op.Goto, start);
+        body.add(ret);
+        // make the done label
+        ret = new SSAStatement(node, SSAStatement.Op.Label, done);
+        body.add(ret);
+        // check for unify between post body and post cond
+        for(Map.Entry<String, SSAStatement> entry : postBody.entrySet()) {
+            System.out.println("Key:" + entry.getKey() + ", Value:"+ ((SSAStatement)entry.getValue()).getIndex());
+
+            if(postConditon.containsKey(entry.getKey())) {
+
+                SSAStatement old = (SSAStatement)postConditon.get(entry.getKey());
+                SSAStatement newer = (SSAStatement)entry.getValue();
+
+                if(newer.getIndex() != old.getIndex()) {
+                    System.out.println("Unify while post condition and body");
+                    ret = new SSAStatement(node, SSAStatement.Op.Unify, old, newer);
+                    body.add(ret);
+                    scope.put(entry.getKey(), ret);
+                }
+
+            }
+
+        }
+
+        // then check unify between 
+        for(Map.Entry<String, SSAStatement> entry : scope.entrySet()) {
+            System.out.println("Key:" + entry.getKey() + ", Value:"+ ((SSAStatement)entry.getValue()).getIndex());
+
+            if(original.containsKey(entry.getKey())) {
+
+                SSAStatement old = (SSAStatement)original.get(entry.getKey());
+                SSAStatement newer = (SSAStatement)entry.getValue();
+
+                if(newer.getIndex() != old.getIndex()) {
+                    System.out.println("Unify while original and above");
+                    ret = new SSAStatement(node, SSAStatement.Op.Unify, old, newer);
+                    body.add(ret);
+                    scope.put(entry.getKey(), ret);
+                }
+
+            }
+
+        }
 
         return ret; 
     }
+
     public void compileReturn(Exp retExp) {
         // ...
         System.out.println("Return");
         SSAStatement left = (SSAStatement)visit(retExp);
-        if( retExp instanceof VarExp) {
+        /*if( retExp instanceof VarExp) {
             VarExp exp = (VarExp)retExp;
             System.out.println("name:" +exp.getName());
             if(!scope.containsKey(exp.getName()))
                 body.add(new SSAStatement(retExp, SSAStatement.Op.Member, left, null, exp.getName()));
-        }
+        }*/
         SSAStatement ret = new SSAStatement(retExp, SSAStatement.Op.Return, left, null);
         body.add(ret);
     }
