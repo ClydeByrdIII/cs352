@@ -145,8 +145,8 @@ public class SSAInterpreter {
             SSAStatement.Op op = s.getOp();
             SSAStatement left = s.getLeft();
             SSAStatement right = s.getRight();
-            Object special = s.getSpecial();
-
+            Object special =  s.getSpecial();
+            System.out.println("Op is " + op + " special is "+ special + " right is " + right + " left is " + left);
             switch (op) {
                 // Meta:
                 case Unify:
@@ -276,9 +276,12 @@ public class SSAInterpreter {
                     break;
 
                 case MemberAssg:
-                {
+                {   
+
                     IntObject obj = (IntObject) results.get(left);
+
                     result = results.get(right);
+                    System.out.println("IntObj:" + obj + " right is "+ result.getClass() + " special " + special);
                     obj.fields.put((String) special, result);
                     break;
                 }

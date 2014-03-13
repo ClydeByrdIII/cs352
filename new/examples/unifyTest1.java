@@ -5,12 +5,16 @@ class Factorial{
 }
 
 class Fac {
-	int n;
+
     public int ComputeFac(int num){
-	int x;
-	n = 2;
-	x = n;
-	return n;
+	int num_aux ;
+
+	num_aux = 0;
+	if (num < 1)
+	    num_aux = 1 ;
+	else 
+	    num_aux = num * (this.ComputeFac(num-1)) ;
+	return num_aux ;
     }
 
 }

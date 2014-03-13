@@ -42,10 +42,7 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
 
     public static SSAMethod compile(MethodDecl method) {
         SSACompiler compiler = new SSACompiler();
-        List<Parameter> parameters = new ArrayList<Parameter>();
-        List<VarDecl> variables = new ArrayList<VarDecl>();
         List<SSAStatement> body = compiler.getBody();
-        List<Statement> statement = new ArrayList<Statement>();
         Map<String, SSAStatement> table = compiler.getScope();
         SSAStatement ssaParam, ssaValue;
         Type type;
@@ -67,6 +64,7 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
             SSAStatement left = table.get(param.getName());
             ssaValue = new SSAStatement(param, SSAStatement.Op.VarAssg, left, null, param.getName());
             body.add(ssaValue);
+            table.put(param.getName(), ssaValue);
         }
         // and the variable declarations
         // ...
@@ -89,6 +87,8 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
             System.out.println("Statement for " + method.getName());
             stat.accept(compiler);
         }
+
+
         // and the return
         compiler.compileReturn(method.getRetExp());
 
@@ -118,9 +118,8 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
                 ret = new SSAStatement(exp, SSAStatement.Op.MemberAssg, (SSAStatement)visit(target), left, name);
             } else {
                 ret = new SSAStatement(exp, SSAStatement.Op.VarAssg, left, null, name);
-
                 scope.put(name, ret);
-                System.out.println("AssignExp, VarExp Assigned:" + ((VarExp)target).getName());
+                System.out.println("AssignExp, VarExp Assigned:" + name);
             }
         } else if (target instanceof MemberExp) {
             // ...
@@ -197,8 +196,9 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
     }
     @Override public Object visit(BooleanLiteralExp node) {
         System.out.println("BooleanLiteralExp:" + node.getValue());
-        SSAStatement ret = null;
-        Boolean value = node.getValue();
+        SSAStatement ret;
+        boolean value = node.getValue();
+
         ret = new SSAStatement(node, SSAStatement.Op.Boolean, value);
         body.add(ret);
         return ret; 
@@ -210,7 +210,7 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         Exp target = node.getTarget();
         List<SSAStatement> args = new ArrayList<SSAStatement>();
         String method = node.getMethod();
- 
+
         // Evaluate left side
         left = (SSAStatement)visit(target);
         /* evaluate arguments */
@@ -273,33 +273,39 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
     @Override public Object visit(IfStatement node) {
         System.out.println("IfStatement");
         SSAStatement ret, left;
+        String label, done;
+        label = "lif_" + id + "_else";
+        done = "lif_" + id++ + "_done" ;
         left = (SSAStatement)visit(node.getCondition());
+        System.out.println("Done visiting condition");
         Statement ifpart = node.getIfPart();
         Statement elsepart = node.getElsePart();
-        String label, done;
-        Map<String, SSAStatement> ifHash = new HashMap(scope);
-        Map<String, SSAStatement> elseHash = new HashMap(scope);
-        label = "lif_" + id + "_else";
-        done = "lif_" + id + "_done" ;
+        
+        Map<String, SSAStatement> original, ifHash, elseHash;
+
+        original = new HashMap<String, SSAStatement>(scope);
+        elseHash = null;
+
+        
 
         if(elsepart == null) {
             // if null then no else;
             // Branch to done if false
-            ret = new SSAStatement(node, SSAStatement.Op.NBranch, done);
+            ret = new SSAStatement(node, SSAStatement.Op.NBranch, left, null, done);
             body.add(ret);
             // if true do evaluate the statements
             visit(ifpart);
-
+            ifHash = new HashMap<String, SSAStatement>(scope);
             // now you fall in to done     
         } else {
             // is an else
             // branch to else if false
-            ret = new SSAStatement(node, SSAStatement.Op.NBranch, label);
+            ret = new SSAStatement(node, SSAStatement.Op.NBranch, left, null, label);
             body.add(ret);
 
             //if true evaluate the statements
             visit(ifpart);
-
+            ifHash= new HashMap<String, SSAStatement>(scope);
             // goto to done
             ret = new SSAStatement(node, SSAStatement.Op.Goto, done);
             body.add(ret);
@@ -308,6 +314,7 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
             body.add(ret);
             // execute else part
             visit(elsepart);
+            elseHash = new HashMap<String, SSAStatement>(scope);
             // fall in to done
         }
         
@@ -315,22 +322,51 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         ret = new SSAStatement(node, SSAStatement.Op.Label, done);
         body.add(ret);
 
-        // check for unification
-        for(Map.Entry<String, SSAStatement> entry : scope.entrySet()) {
-            System.out.println("Key:" + entry.getKey());
-            if(ifHash.containsKey(entry.getKey())) {
-                SSAStatement old = (SSAStatement)ifHash.get(entry.getKey());
-                SSAStatement newer = (SSAStatement)entry.getValue();
-                if(newer.getIndex() != old.getIndex()) {
-                    System.out.println("Unify");
-                    ret = new SSAStatement(node, SSAStatement.Op.Unify, old, newer);
-                    body.add(ret);
+        /* check for unification */
+
+        // then only check ifhash and else hash, because one must be executed
+        if(elseHash != null) {
+
+            for(Map.Entry<String, SSAStatement> entry : elseHash.entrySet()) {
+                System.out.println("Key:" + entry.getKey() + ", Value:"+ ((SSAStatement)entry.getValue()).getIndex());
+
+                if(ifHash.containsKey(entry.getKey())) {
+
+                    SSAStatement iftrue = (SSAStatement)ifHash.get(entry.getKey());
+                    SSAStatement iffalse = (SSAStatement)entry.getValue();
+
+                    if(iftrue.getIndex() != iffalse.getIndex()) {
+                        System.out.println("Unify if/else");
+                        ret = new SSAStatement(node, SSAStatement.Op.Unify, iftrue, iffalse);
+                        body.add(ret);
+                        scope.put(entry.getKey(), ret);
+                    }
+
                 }
+
+            }
+        } else {
+            for(Map.Entry<String, SSAStatement> entry : ifHash.entrySet()) {
+                System.out.println("Key:" + entry.getKey() + ", Value:"+ ((SSAStatement)entry.getValue()).getIndex());
+
+                if(ifHash.containsKey(entry.getKey())) {
+
+                    SSAStatement old = (SSAStatement)original.get(entry.getKey());
+                    SSAStatement newer = (SSAStatement)entry.getValue();
+
+                    if(newer.getIndex() != old.getIndex()) {
+                        System.out.println("Unify if");
+                        ret = new SSAStatement(node, SSAStatement.Op.Unify, old, newer);
+                        body.add(ret);
+                        scope.put(entry.getKey(), ret);
+                    }
+
+                }
+
             }
         }
 
-        id++;
-        return ret; 
+        return left; 
     }
 
     @Override public Object visit(IndexExp node) {
@@ -430,13 +466,10 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         SSAStatement ret;
         ret = (SSAStatement)scope.get(node.getName());
         if(ret == null){
-            SSAStatement tar;
             // member variable, call a this and add to the body
-            tar = new SSAStatement(node, SSAStatement.Op.This);
-            body.add(tar);
-            // then create a new member variable
-            ret = new SSAStatement(node, SSAStatement.Op.Member, tar, null, node.getName());
+            ret = new SSAStatement(node, SSAStatement.Op.This);
             body.add(ret);
+           
         }
         return ret; 
     }
@@ -450,6 +483,12 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         // ...
         System.out.println("Return");
         SSAStatement left = (SSAStatement)visit(retExp);
+        if( retExp instanceof VarExp) {
+            VarExp exp = (VarExp)retExp;
+            System.out.println("name:" +exp.getName());
+            if(!scope.containsKey(exp.getName()))
+                body.add(new SSAStatement(retExp, SSAStatement.Op.Member, left, null, exp.getName()));
+        }
         SSAStatement ret = new SSAStatement(retExp, SSAStatement.Op.Return, left, null);
         body.add(ret);
     }
