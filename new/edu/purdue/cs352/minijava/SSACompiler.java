@@ -567,12 +567,15 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         // ...
         System.out.println("Return");
         SSAStatement left = (SSAStatement)visit(retExp);
-        /*if( retExp instanceof VarExp) {
+        if( retExp instanceof VarExp) {
             VarExp exp = (VarExp)retExp;
             System.out.println("name:" +exp.getName());
-            if(!scope.containsKey(exp.getName()))
-                body.add(new SSAStatement(retExp, SSAStatement.Op.Member, left, null, exp.getName()));
-        }*/
+            if(scope.containsKey(exp.getName()) && scope.get(exp.getName()).getOp() == SSAStatement.Op.MemberAssg){
+                System.out.println("Member");
+                
+                body.add(new SSAStatement(retExp, SSAStatement.Op.Member, (SSAStatement)visit(new VarExp(null, exp.getName())), null, exp.getName()));
+            }
+        }
         SSAStatement ret = new SSAStatement(retExp, SSAStatement.Op.Return, left, null);
         body.add(ret);
     }
