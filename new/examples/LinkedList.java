@@ -72,6 +72,7 @@ class Element {
 }
 
 class List{
+	
     Element elem ;
     List next ;
     boolean end ;
@@ -129,7 +130,7 @@ class List{
 	var_end = end;
 	var_elem = elem ;
 	while ((!var_end) && (!ret_val)){
-	    if (e.Equal(var_elem)){
+    if (e.Equal(var_elem)){
 		ret_val = true ;
 		if (aux04 < 0) { 
 		    // delete first element
@@ -140,20 +141,20 @@ class List{
 		    aux05 = prev.SetNext(aux01.GetNext());
 		    System.out.println(0-555);
 		    
-		}
-	    } else nt = 0 ;
+		} 
+	    } else nt = 0 ; 
 	    if (!ret_val){
 		prev = aux01 ;
 		aux01 = aux01.GetNext() ;
 		var_end = aux01.GetEnd();
 		var_elem = aux01.GetElem();
 		aux04 = 1 ; 
-	    } else nt = 0 ;
-	}
+	    } else nt = 0 ; 
+	} 
 	return my_head ;
     }
     
-    
+   
     // Search for an element e on the list
     public int Search(Element e){
 	int int_ret_val ;
@@ -208,7 +209,7 @@ class List{
 	}
 
 	return true ;
-    }
+    } 
 }
     
 
@@ -224,7 +225,7 @@ class LL{
 	Element el01 ;
 	Element el02 ;
 	Element el03 ;
-
+/*
 	last_elem = new List();
 	aux01 = last_elem.Init();
 	head = last_elem ;
@@ -269,7 +270,7 @@ class LL{
 	head = head.Delete(el01);
 	aux01 = head.Print();
 	System.out.println(44440000);
-	
+	*/
 	return 0 ;
 	
 	

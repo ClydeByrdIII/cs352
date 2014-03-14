@@ -77,9 +77,6 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
             table.put(var.getName(), ssaValue); 
         }
 
-        for (Map.Entry<String, SSAStatement> entry : table.entrySet()){
-     //       System.out.println("Key:" + entry.getKey() + ", Value:" + ((SSAStatement)entry.getValue()).getIndex());
-        }
         // then compile the body
         // ...
         // statement.accept(compiler);
@@ -335,7 +332,7 @@ public class SSACompiler extends ASTVisitor.SimpleASTVisitor {
         if(elseHash != null) {
            // System.out.println("It was not null");
             for(Map.Entry<String, SSAStatement> entry : elseHash.entrySet()) {
-              //  System.out.println("Key:" + entry.getKey() + ", Value:"+ ((SSAStatement)entry.getValue()).getIndex());
+              // System.out.println("Key:" + entry.getKey() + ", Value:"+ ((SSAStatement)entry.getValue()).getIndex());
 
                 if(ifHash.containsKey(entry.getKey())) {
 
