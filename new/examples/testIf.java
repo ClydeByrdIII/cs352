@@ -7,6 +7,9 @@ class Simple {
 class Sim {
 		public int sum(int i) {
 			int[] a;
+			int b;
+			int c;
+			int d;
 
 			a = new int[i];
 
@@ -15,8 +18,9 @@ class Sim {
 			}
 
 			a[0] = 2;
-			
-			System.out.println(a[0]);
+			b = c =0;
+			System.out.println(b);
+			System.out.println(c);
 			return 1;
 		}
 }
