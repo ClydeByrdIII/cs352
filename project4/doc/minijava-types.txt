@@ -66,9 +66,9 @@ Load:           *Integer -> U
 VarAssg:        T *String -> U
                   Special refers to a local variable. Variable must be
                   defined. The variable's type is U. T must be a subtype of U.
-MemberAssg:     Object T *String -> T
+MemberAssg:     Object T *String -> U
                   Object's class or superclass must have a field with the
-                  given name.
+                  given name of type U. T must be a subtype of U.
 IndexAssg:      int[] int *SSAStatement(int) -> int
 
 
