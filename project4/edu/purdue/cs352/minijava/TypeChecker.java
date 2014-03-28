@@ -7,7 +7,7 @@ import edu.purdue.cs352.minijava.ssa.*;
 import edu.purdue.cs352.minijava.types.*;
 import static edu.purdue.cs352.minijava.types.PrimitiveType.*;
 import static edu.purdue.cs352.minijava.ssa.SSAStatement.*;
-/* TODO Check for duplicate classes, parameters, variables, and fields and check types */
+
 public class TypeChecker {
     SSAProgram prog;
     Map<String, StaticType> types;
@@ -54,11 +54,11 @@ public class TypeChecker {
             addClass(cless);
         }
 
-        // handle the stats
+        // handle the fields and methods
         for(SSAClass cless: classes) {
             handleClass(cless);
         }
-
+        // handle the stats
         for(SSAClass cless: classes) {
             ClassDecl cd = (ClassDecl)cless.getASTNode();
             String name = cd.getName();
@@ -66,24 +66,24 @@ public class TypeChecker {
         }
         // Deal with Main
         handleStats(prog.getMain());
-    
     }
 
     public void handleClass(SSAClass cless) {
         ClassDecl cd = (ClassDecl)cless.getASTNode();
         String name = cd.getName();
-
+        // add Fields
         Map<String, String> dupList = new HashMap<String,String>();
         for(SSAField field : cless.getFieldsOrdered()) {
             VarDecl vd = field.getField();
             if(dupList.containsKey(vd.getName())){
-                throw new Error("Duplicate Member:" + vd.getName());
+                throw new Error("Duplicate Class Member:" + vd.getName());
             }
             handleField(field);
             dupList.put(vd.getName(), vd.getName());
         }
 
         dupList.clear();
+        // add methods
         for(SSAMethod method : cless.getMethodsOrdered()) {
             MethodDecl md = method.getMethod();
             if(dupList.containsKey(md.getName())){
@@ -106,18 +106,14 @@ public class TypeChecker {
         }
 
         if(eggstends != null) { 
-            // fix this to handle if the class wasn't add yet 
             supper = prog.getClass(eggstends);
             if(supper == null) 
                 throw new Error("Super Class " + eggstends + " does not exist!");
             // make sure it has been added first
-
             addClass(supper);
-
             String supName = ((ClassDecl)supper.getASTNode()).getName();
             ObjectType supType = (ObjectType)types.get(supName);
             types.put(name, new ObjectType(name, supType));
-
         } else {
             types.put(name, new ObjectType(name, defaultSuper())); 
         }
@@ -133,7 +129,7 @@ public class TypeChecker {
     public void handleMethod(SSAMethod method, String cless) {
 
         if(method.getMain() == null) {
-            //Parameters
+            //Add Parameter Types
             MethodDecl meth = method.getMethod();
             List<StaticType> ptypes = new ArrayList<StaticType>();
             List<Parameter> params = meth.getParameters();
@@ -170,33 +166,30 @@ public class TypeChecker {
                 }
                 dupList.put(name, name);
             }
-            
-            if(ssa.getOp() == Op.This) throw new Error("No This allowed in Main in MiniJava");
+            if(ssa.getOp() == Op.This) throw new Error("\"This\" is not allowed in MiniJava's main");
             addType(ssa, "Main", "Main");
         }
     }
 
     public void handleStats(List<SSAMethod> methods, String cless) {
         for(SSAMethod method : methods) {
-             Map<String, String> dupList = new HashMap<String,String>();
+            Map<String, String> dupList = new HashMap<String,String>();
             for(SSAStatement ssa : method.getBody()) {
                 String name;
-            if(ssa.getOp() == Op.Null) {
-
-                name = ((VarDecl)ssa.getASTNode()).getName();
-                if(dupList.containsKey(name)) {
-                    throw new Error("Class:" + cless + " Duplicate Variable name :" + name);
+                if(ssa.getOp() == Op.Null) {
+                    name = ((VarDecl)ssa.getASTNode()).getName();
+                    if(dupList.containsKey(name)) {
+                        throw new Error("Class:" + cless + " Duplicate Variable name :" + name);
+                    }
+                    dupList.put(name, name);
+                } else if(ssa.getOp() == Op.Parameter) {
+                    Parameter param = (Parameter)ssa.getASTNode();
+                    name = param.getName();
+                    if(dupList.containsKey(name)) {
+                        throw new Error("Class:" + cless + " Duplicate Parameter name:" + name);
+                    }
+                    dupList.put(name, name);
                 }
-                dupList.put(name, name);
-            } else if(ssa.getOp() == Op.Parameter) {
-                Parameter param = (Parameter)ssa.getASTNode();
-                name = param.getName();
-                if(dupList.containsKey(name)) {
-                    throw new Error("Class:" + cless + " Duplicate Parameter name:" + name);
-                }
-                dupList.put(name, name);
-            }
-                
                 addType(ssa, cless, method.getMethod().getName());
             }
         }
@@ -210,9 +203,7 @@ public class TypeChecker {
         Op oper = ssa.getOp();
         String name;
         Type t;
-        StaticType type = null;
-        StaticType req;
-        StaticType found;
+        StaticType type, req, found;
 
         switch(oper) {
             case Int:
@@ -231,7 +222,6 @@ public class TypeChecker {
                 StaticType t1 = left.getType();
                 StaticType t2 = right.getType();
 
-                // add instanceofs for ObjectTypes
                 if(t1 instanceof ObjectType && t2 instanceof ObjectType) {
                     ObjectType obj = (ObjectType)t1;
                     ObjectType obj2 = (ObjectType)t2;
@@ -302,7 +292,8 @@ public class TypeChecker {
             
                 List<SSAStatement> args = call.getArgs();
                 for(SSAStatement arg : args) {
-                    if(arg.getOp() != Op.Arg) throw new Error("An argument of " + call.getMethod() + " was not an Argument SSAStatement");
+                    if(arg.getOp() != Op.Arg) 
+                        throw new Error("An argument of " + call.getMethod() + " was not an Argument SSAStatement");
                     int index = (int)arg.getSpecial();
                     found = arg.getType();
                     req = meth.getParamType(index);
@@ -327,7 +318,7 @@ public class TypeChecker {
                 if(name.equals("length")) {
                     req = types.get("int[]");
                     found = left.getType();
-                    checkTypes(req, found, "Tried to access the length variable of a non-array variable");
+                    checkTypes(req, found, "Tried to access the length member of a non-array variable");
                     type = types.get("int");
                 } else {
                     ObjectType objType = (ObjectType) left.getType();
@@ -356,9 +347,10 @@ public class TypeChecker {
                 type = req;
                 break;
             case MemberAssg:
+                left = ssa.getLeft();
                 right = ssa.getRight();
-
-                req = findType(ssa, cless, method);
+                ObjectType memType = (ObjectType)left.getType();
+                req = findType(ssa, memType.toString(), method);
                 found = right.getType();
                 checkTypes(req, found, "Member Assignement to the wrong type");
                 type = req;
@@ -412,7 +404,7 @@ public class TypeChecker {
                 found = left.getType();
                 checkTypes(req, found, "left value in Conditional Expression was not a boolean");
                 found = right.getType();
-                checkTypes(req, found, "left value in Conditional Expression was not a boolean");
+                checkTypes(req, found, "right value in Conditional Expression was not a boolean");
                 type = req;
                 break;
             case Plus:           
@@ -426,7 +418,7 @@ public class TypeChecker {
                 found = left.getType();
                 checkTypes(req, found, "left value in Arithmetic Expression was not an int");
                 found = right.getType();
-                checkTypes(req, found, "Right value in Arithmetic Expression was not an int");
+                checkTypes(req, found, "right value in Arithmetic Expression was not an int");
                 type = req;
                 break;
             default:
@@ -438,19 +430,18 @@ public class TypeChecker {
     } 
 
     public StaticType findType(SSAStatement ssa, String cless, String method) {
-
-        Op oper = ssa.getOp();
         StaticType type = null;
-        SSAStatement left, right;
+        SSAStatement left;
         SSAMethod meth;
         String name;
-        Type t;
-        // check 
+        // Get the name of what we are looking for
         left = ssa.getLeft();
         name = (String)ssa.getSpecial();
+        // find it's class and get it's a member variable
         SSAClass cl = prog.getClass(cless);
         SSAField fd = cl.getField(prog, name);
 
+        // if it's not a member field then check the methodDecl for params and vars
         if(fd == null) {
             meth = cl.getMethod(prog, method);
             MethodDecl md = meth.getMethod();

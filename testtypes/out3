@@ -1,0 +1,727 @@
+0a1,726
+> program:
+>   main:
+>     method main:
+>       0: NewObj *TV :TV
+>       1: Call 0 *Start() :int
+>       2: Print 1 :void
+>   class TV:
+>     method Start:
+>       3: Null *Type(Tree) :Tree
+>       4: Null *Type(boolean) :boolean
+>       5: Null *Type(int) :int
+>       6: Null *Type(MyVisitor) :MyVisitor
+>       7: NewObj *Tree :Tree
+>       8: VarAssg 7 *root :Tree
+>       9: Int *16 :int
+>       10: Arg 9 *0 :int
+>       11: Call 8 *Init(10) :boolean
+>       12: VarAssg 11 *ntb :boolean
+>       13: Call 8 *Print() :boolean
+>       14: VarAssg 13 *ntb :boolean
+>       15: Int *100000000 :int
+>       16: Print 15 :void
+>       17: Int *8 :int
+>       18: Arg 17 *0 :int
+>       19: Call 8 *Insert(18) :boolean
+>       20: VarAssg 19 *ntb :boolean
+>       21: Int *24 :int
+>       22: Arg 21 *0 :int
+>       23: Call 8 *Insert(22) :boolean
+>       24: VarAssg 23 *ntb :boolean
+>       25: Int *4 :int
+>       26: Arg 25 *0 :int
+>       27: Call 8 *Insert(26) :boolean
+>       28: VarAssg 27 *ntb :boolean
+>       29: Int *12 :int
+>       30: Arg 29 *0 :int
+>       31: Call 8 *Insert(30) :boolean
+>       32: VarAssg 31 *ntb :boolean
+>       33: Int *20 :int
+>       34: Arg 33 *0 :int
+>       35: Call 8 *Insert(34) :boolean
+>       36: VarAssg 35 *ntb :boolean
+>       37: Int *28 :int
+>       38: Arg 37 *0 :int
+>       39: Call 8 *Insert(38) :boolean
+>       40: VarAssg 39 *ntb :boolean
+>       41: Int *14 :int
+>       42: Arg 41 *0 :int
+>       43: Call 8 *Insert(42) :boolean
+>       44: VarAssg 43 *ntb :boolean
+>       45: Call 8 *Print() :boolean
+>       46: VarAssg 45 *ntb :boolean
+>       47: Int *100000000 :int
+>       48: Print 47 :void
+>       49: NewObj *MyVisitor :MyVisitor
+>       50: VarAssg 49 *v :MyVisitor
+>       51: Int *50000000 :int
+>       52: Print 51 :void
+>       53: Arg 50 *0 :MyVisitor
+>       54: Call 8 *accept(53) :int
+>       55: VarAssg 54 *nti :int
+>       56: Int *100000000 :int
+>       57: Print 56 :void
+>       58: Int *24 :int
+>       59: Arg 58 *0 :int
+>       60: Call 8 *Search(59) :int
+>       61: Print 60 :void
+>       62: Int *12 :int
+>       63: Arg 62 *0 :int
+>       64: Call 8 *Search(63) :int
+>       65: Print 64 :void
+>       66: Int *16 :int
+>       67: Arg 66 *0 :int
+>       68: Call 8 *Search(67) :int
+>       69: Print 68 :void
+>       70: Int *50 :int
+>       71: Arg 70 *0 :int
+>       72: Call 8 *Search(71) :int
+>       73: Print 72 :void
+>       74: Int *12 :int
+>       75: Arg 74 *0 :int
+>       76: Call 8 *Search(75) :int
+>       77: Print 76 :void
+>       78: Int *12 :int
+>       79: Arg 78 *0 :int
+>       80: Call 8 *Delete(79) :boolean
+>       81: VarAssg 80 *ntb :boolean
+>       82: Call 8 *Print() :boolean
+>       83: VarAssg 82 *ntb :boolean
+>       84: Int *12 :int
+>       85: Arg 84 *0 :int
+>       86: Call 8 *Search(85) :int
+>       87: Print 86 :void
+>       88: Int *0 :int
+>       89: Return 88 :void
+>   class Tree:
+>     method Init:
+>       90: Parameter *0 :int
+>       91: VarAssg 90 *v_key :int
+>       92: This :Tree
+>       93: MemberAssg 92 91 *key :int
+>       94: This :Tree
+>       95: Boolean *false :boolean
+>       96: MemberAssg 94 95 *has_left :boolean
+>       97: This :Tree
+>       98: Boolean *false :boolean
+>       99: MemberAssg 97 98 *has_right :boolean
+>       100: Boolean *true :boolean
+>       101: Return 100 :void
+>     method SetRight:
+>       102: Parameter *0 :Tree
+>       103: VarAssg 102 *rn :Tree
+>       104: This :Tree
+>       105: MemberAssg 104 103 *right :Tree
+>       106: Boolean *true :boolean
+>       107: Return 106 :void
+>     method SetLeft:
+>       108: Parameter *0 :Tree
+>       109: VarAssg 108 *ln :Tree
+>       110: This :Tree
+>       111: MemberAssg 110 109 *left :Tree
+>       112: Boolean *true :boolean
+>       113: Return 112 :void
+>     method GetRight:
+>       114: This :Tree
+>       115: Member 114 *right :Tree
+>       116: Return 115 :void
+>     method GetLeft:
+>       117: This :Tree
+>       118: Member 117 *left :Tree
+>       119: Return 118 :void
+>     method GetKey:
+>       120: This :Tree
+>       121: Member 120 *key :int
+>       122: Return 121 :void
+>     method SetKey:
+>       123: Parameter *0 :int
+>       124: VarAssg 123 *v_key :int
+>       125: This :Tree
+>       126: MemberAssg 125 124 *key :int
+>       127: Boolean *true :boolean
+>       128: Return 127 :void
+>     method GetHas_Right:
+>       129: This :Tree
+>       130: Member 129 *has_right :boolean
+>       131: Return 130 :void
+>     method GetHas_Left:
+>       132: This :Tree
+>       133: Member 132 *has_left :boolean
+>       134: Return 133 :void
+>     method SetHas_Left:
+>       135: Parameter *0 :boolean
+>       136: VarAssg 135 *val :boolean
+>       137: This :Tree
+>       138: MemberAssg 137 136 *has_left :boolean
+>       139: Boolean *true :boolean
+>       140: Return 139 :void
+>     method SetHas_Right:
+>       141: Parameter *0 :boolean
+>       142: VarAssg 141 *val :boolean
+>       143: This :Tree
+>       144: MemberAssg 143 142 *has_right :boolean
+>       145: Boolean *true :boolean
+>       146: Return 145 :void
+>     method Compare:
+>       147: Parameter *0 :int
+>       148: Parameter *1 :int
+>       149: VarAssg 147 *num1 :int
+>       150: VarAssg 148 *num2 :int
+>       151: Null *Type(boolean) :boolean
+>       152: Null *Type(int) :int
+>       153: Boolean *false :boolean
+>       154: VarAssg 153 *ntb :boolean
+>       155: Int *1 :int
+>       156: Plus 150 155 :int
+>       157: VarAssg 156 *nti :int
+>       158: Lt 149 150 :boolean
+>       159: NBranch 158 *lif_1273655764_else :void
+>       160: Boolean *false :boolean
+>       161: VarAssg 160 *ntb :boolean
+>       162: Goto *lif_1273655764_done :void
+>       163: Label *lif_1273655764_else :void
+>       164: Lt 149 157 :boolean
+>       165: Not 164 :boolean
+>       166: NBranch 165 *lif_215432252_else :void
+>       167: Boolean *false :boolean
+>       168: VarAssg 167 *ntb :boolean
+>       169: Goto *lif_215432252_done :void
+>       170: Label *lif_215432252_else :void
+>       171: Boolean *true :boolean
+>       172: VarAssg 171 *ntb :boolean
+>       173: Label *lif_215432252_done :void
+>       174: Unify 168 172 :boolean
+>       175: Label *lif_1273655764_done :void
+>       176: Unify 161 174 :boolean
+>       177: Return 176 :void
+>     method Insert:
+>       178: Parameter *0 :int
+>       179: VarAssg 178 *v_key :int
+>       180: Null *Type(Tree) :Tree
+>       181: Null *Type(boolean) :boolean
+>       182: Null *Type(Tree) :Tree
+>       183: Null *Type(boolean) :boolean
+>       184: Null *Type(int) :int
+>       185: NewObj *Tree :Tree
+>       186: VarAssg 185 *new_node :Tree
+>       187: Arg 179 *0 :int
+>       188: Call 186 *Init(187) :boolean
+>       189: VarAssg 188 *ntb :boolean
+>       190: This :Tree
+>       191: VarAssg 190 *current_node :Tree
+>       192: Boolean *true :boolean
+>       193: VarAssg 192 *cont :boolean
+>       194: Label *lwhile_1981657541_start :void
+>       195: NBranch 193 *lwhile_1981657541_end :void
+>       196: Call 191 *GetKey() :int
+>       197: VarAssg 196 *key_aux :int
+>       198: Lt 179 197 :boolean
+>       199: NBranch 198 *lif_394410264_else :void
+>       200: Call 191 *GetHas_Left() :boolean
+>       201: NBranch 200 *lif_1718772406_else :void
+>       202: Call 191 *GetLeft() :Tree
+>       203: VarAssg 202 *current_node :Tree
+>       204: Goto *lif_1718772406_done :void
+>       205: Label *lif_1718772406_else :void
+>       206: Boolean *false :boolean
+>       207: VarAssg 206 *cont :boolean
+>       208: Boolean *true :boolean
+>       209: Arg 208 *0 :boolean
+>       210: Call 191 *SetHas_Left(209) :boolean
+>       211: VarAssg 210 *ntb :boolean
+>       212: Arg 186 *0 :Tree
+>       213: Call 191 *SetLeft(212) :boolean
+>       214: VarAssg 213 *ntb :boolean
+>       215: Label *lif_1718772406_done :void
+>       216: Unify 189 214 :boolean
+>       217: Unify 193 207 :boolean
+>       218: Unify 203 191 :Tree
+>       219: Goto *lif_394410264_done :void
+>       220: Label *lif_394410264_else :void
+>       221: Call 191 *GetHas_Right() :boolean
+>       222: NBranch 221 *lif_1605291845_else :void
+>       223: Call 191 *GetRight() :Tree
+>       224: VarAssg 223 *current_node :Tree
+>       225: Goto *lif_1605291845_done :void
+>       226: Label *lif_1605291845_else :void
+>       227: Boolean *false :boolean
+>       228: VarAssg 227 *cont :boolean
+>       229: Boolean *true :boolean
+>       230: Arg 229 *0 :boolean
+>       231: Call 191 *SetHas_Right(230) :boolean
+>       232: VarAssg 231 *ntb :boolean
+>       233: Arg 186 *0 :Tree
+>       234: Call 191 *SetRight(233) :boolean
+>       235: VarAssg 234 *ntb :boolean
+>       236: Label *lif_1605291845_done :void
+>       237: Unify 189 235 :boolean
+>       238: Unify 193 228 :boolean
+>       239: Unify 224 191 :Tree
+>       240: Label *lif_394410264_done :void
+>       241: Unify 217 238 :boolean
+>       242: Unify 216 237 :boolean
+>       243: Unify 218 239 :Tree
+>       244: Goto *lwhile_1981657541_start :void
+>       245: Label *lwhile_1981657541_end :void
+>       246: Unify 189 242 :boolean
+>       247: Unify 184 197 :int
+>       248: Unify 193 241 :boolean
+>       249: Unify 191 243 :Tree
+>       250: Boolean *true :boolean
+>       251: Return 250 :void
+>     method Delete:
+>       252: Parameter *0 :int
+>       253: VarAssg 252 *v_key :int
+>       254: Null *Type(Tree) :Tree
+>       255: Null *Type(Tree) :Tree
+>       256: Null *Type(boolean) :boolean
+>       257: Null *Type(boolean) :boolean
+>       258: Null *Type(boolean) :boolean
+>       259: Null *Type(boolean) :boolean
+>       260: Null *Type(int) :int
+>       261: This :Tree
+>       262: VarAssg 261 *current_node :Tree
+>       263: This :Tree
+>       264: VarAssg 263 *parent_node :Tree
+>       265: Boolean *true :boolean
+>       266: VarAssg 265 *cont :boolean
+>       267: Boolean *false :boolean
+>       268: VarAssg 267 *found :boolean
+>       269: Boolean *true :boolean
+>       270: VarAssg 269 *is_root :boolean
+>       271: Label *lwhile_1302981654_start :void
+>       272: NBranch 266 *lwhile_1302981654_end :void
+>       273: Call 262 *GetKey() :int
+>       274: VarAssg 273 *key_aux :int
+>       275: Lt 253 274 :boolean
+>       276: NBranch 275 *lif_1321910319_else :void
+>       277: Call 262 *GetHas_Left() :boolean
+>       278: NBranch 277 *lif_1628403218_else :void
+>       279: VarAssg 262 *parent_node :Tree
+>       280: Call 262 *GetLeft() :Tree
+>       281: VarAssg 280 *current_node :Tree
+>       282: Goto *lif_1628403218_done :void
+>       283: Label *lif_1628403218_else :void
+>       284: Boolean *false :boolean
+>       285: VarAssg 284 *cont :boolean
+>       286: Label *lif_1628403218_done :void
+>       287: Unify 279 264 :Tree
+>       288: Unify 266 285 :boolean
+>       289: Unify 281 262 :Tree
+>       290: Goto *lif_1321910319_done :void
+>       291: Label *lif_1321910319_else :void
+>       292: Lt 274 253 :boolean
+>       293: NBranch 292 *lif_1041287558_else :void
+>       294: Call 262 *GetHas_Right() :boolean
+>       295: NBranch 294 *lif_1075747903_else :void
+>       296: VarAssg 262 *parent_node :Tree
+>       297: Call 262 *GetRight() :Tree
+>       298: VarAssg 297 *current_node :Tree
+>       299: Goto *lif_1075747903_done :void
+>       300: Label *lif_1075747903_else :void
+>       301: Boolean *false :boolean
+>       302: VarAssg 301 *cont :boolean
+>       303: Label *lif_1075747903_done :void
+>       304: Unify 296 264 :Tree
+>       305: Unify 266 302 :boolean
+>       306: Unify 298 262 :Tree
+>       307: Goto *lif_1041287558_done :void
+>       308: Label *lif_1041287558_else :void
+>       309: NBranch 270 *lif_430181628_else :void
+>       310: Call 262 *GetHas_Right() :boolean
+>       311: Not 310 :boolean
+>       312: Call 262 *GetHas_Left() :boolean
+>       313: Not 312 :boolean
+>       314: And 311 313 :boolean
+>       315: NBranch 314 *lif_1632665994_else :void
+>       316: Boolean *true :boolean
+>       317: VarAssg 316 *ntb :boolean
+>       318: Goto *lif_1632665994_done :void
+>       319: Label *lif_1632665994_else :void
+>       320: This :Tree
+>       321: Arg 264 *0 :Tree
+>       322: Arg 262 *1 :Tree
+>       323: Call 320 *Remove(321, 322) :boolean
+>       324: VarAssg 323 *ntb :boolean
+>       325: Label *lif_1632665994_done :void
+>       326: Unify 317 324 :boolean
+>       327: Goto *lif_430181628_done :void
+>       328: Label *lif_430181628_else :void
+>       329: This :Tree
+>       330: Arg 264 *0 :Tree
+>       331: Arg 262 *1 :Tree
+>       332: Call 329 *Remove(330, 331) :boolean
+>       333: VarAssg 332 *ntb :boolean
+>       334: Label *lif_430181628_done :void
+>       335: Unify 326 333 :boolean
+>       336: Boolean *true :boolean
+>       337: VarAssg 336 *found :boolean
+>       338: Boolean *false :boolean
+>       339: VarAssg 338 *cont :boolean
+>       340: Label *lif_1041287558_done :void
+>       341: Unify 304 264 :Tree
+>       342: Unify 258 335 :boolean
+>       343: Unify 305 339 :boolean
+>       344: Unify 268 337 :boolean
+>       345: Unify 306 262 :Tree
+>       346: Label *lif_1321910319_done :void
+>       347: Unify 287 341 :Tree
+>       348: Unify 258 342 :boolean
+>       349: Unify 288 343 :boolean
+>       350: Unify 289 345 :Tree
+>       351: Unify 268 344 :boolean
+>       352: Boolean *false :boolean
+>       353: VarAssg 352 *is_root :boolean
+>       354: Goto *lwhile_1302981654_start :void
+>       355: Label *lwhile_1302981654_end :void
+>       356: Unify 270 353 :boolean
+>       357: Unify 264 347 :Tree
+>       358: Unify 258 348 :boolean
+>       359: Unify 260 274 :int
+>       360: Unify 266 349 :boolean
+>       361: Unify 268 351 :boolean
+>       362: Unify 262 350 :Tree
+>       363: Return 361 :void
+>     method Remove:
+>       364: Parameter *0 :Tree
+>       365: Parameter *1 :Tree
+>       366: VarAssg 364 *p_node :Tree
+>       367: VarAssg 365 *c_node :Tree
+>       368: Null *Type(boolean) :boolean
+>       369: Null *Type(int) :int
+>       370: Null *Type(int) :int
+>       371: Call 367 *GetHas_Left() :boolean
+>       372: NBranch 371 *lif_1818803439_else :void
+>       373: This :Tree
+>       374: Arg 366 *0 :Tree
+>       375: Arg 367 *1 :Tree
+>       376: Call 373 *RemoveLeft(374, 375) :boolean
+>       377: VarAssg 376 *ntb :boolean
+>       378: Goto *lif_1818803439_done :void
+>       379: Label *lif_1818803439_else :void
+>       380: Call 367 *GetHas_Right() :boolean
+>       381: NBranch 380 *lif_1347167875_else :void
+>       382: This :Tree
+>       383: Arg 366 *0 :Tree
+>       384: Arg 367 *1 :Tree
+>       385: Call 382 *RemoveRight(383, 384) :boolean
+>       386: VarAssg 385 *ntb :boolean
+>       387: Goto *lif_1347167875_done :void
+>       388: Label *lif_1347167875_else :void
+>       389: Call 367 *GetKey() :int
+>       390: VarAssg 389 *auxkey1 :int
+>       391: Call 366 *GetLeft() :Tree
+>       392: Call 391 *GetKey() :int
+>       393: VarAssg 392 *auxkey2 :int
+>       394: This :Tree
+>       395: Arg 390 *0 :int
+>       396: Arg 393 *1 :int
+>       397: Call 394 *Compare(395, 396) :boolean
+>       398: NBranch 397 *lif_930384804_else :void
+>       399: This :Tree
+>       400: Member 399 *my_null :Tree
+>       401: Arg 400 *0 :Tree
+>       402: Call 366 *SetLeft(401) :boolean
+>       403: VarAssg 402 *ntb :boolean
+>       404: Boolean *false :boolean
+>       405: Arg 404 *0 :boolean
+>       406: Call 366 *SetHas_Left(405) :boolean
+>       407: VarAssg 406 *ntb :boolean
+>       408: Goto *lif_930384804_done :void
+>       409: Label *lif_930384804_else :void
+>       410: This :Tree
+>       411: Member 410 *my_null :Tree
+>       412: Arg 411 *0 :Tree
+>       413: Call 366 *SetRight(412) :boolean
+>       414: VarAssg 413 *ntb :boolean
+>       415: Boolean *false :boolean
+>       416: Arg 415 *0 :boolean
+>       417: Call 366 *SetHas_Right(416) :boolean
+>       418: VarAssg 417 *ntb :boolean
+>       419: Label *lif_930384804_done :void
+>       420: Unify 407 418 :boolean
+>       421: Label *lif_1347167875_done :void
+>       422: Unify 369 390 :int
+>       423: Unify 370 393 :int
+>       424: Unify 386 420 :boolean
+>       425: Label *lif_1818803439_done :void
+>       426: Unify 377 424 :boolean
+>       427: Unify 369 422 :int
+>       428: Unify 370 423 :int
+>       429: Boolean *true :boolean
+>       430: Return 429 :void
+>     method RemoveRight:
+>       431: Parameter *0 :Tree
+>       432: Parameter *1 :Tree
+>       433: VarAssg 431 *p_node :Tree
+>       434: VarAssg 432 *c_node :Tree
+>       435: Null *Type(boolean) :boolean
+>       436: Label *lwhile_1148967021_start :void
+>       437: Call 434 *GetHas_Right() :boolean
+>       438: NBranch 437 *lwhile_1148967021_end :void
+>       439: Call 434 *GetRight() :Tree
+>       440: Call 439 *GetKey() :int
+>       441: Arg 440 *0 :int
+>       442: Call 434 *SetKey(441) :boolean
+>       443: VarAssg 442 *ntb :boolean
+>       444: VarAssg 434 *p_node :Tree
+>       445: Call 434 *GetRight() :Tree
+>       446: VarAssg 445 *c_node :Tree
+>       447: Goto *lwhile_1148967021_start :void
+>       448: Label *lwhile_1148967021_end :void
+>       449: Unify 435 443 :boolean
+>       450: Unify 433 444 :Tree
+>       451: Unify 434 446 :Tree
+>       452: This :Tree
+>       453: Member 452 *my_null :Tree
+>       454: Arg 453 *0 :Tree
+>       455: Call 450 *SetRight(454) :boolean
+>       456: VarAssg 455 *ntb :boolean
+>       457: Boolean *false :boolean
+>       458: Arg 457 *0 :boolean
+>       459: Call 450 *SetHas_Right(458) :boolean
+>       460: VarAssg 459 *ntb :boolean
+>       461: Boolean *true :boolean
+>       462: Return 461 :void
+>     method RemoveLeft:
+>       463: Parameter *0 :Tree
+>       464: Parameter *1 :Tree
+>       465: VarAssg 463 *p_node :Tree
+>       466: VarAssg 464 *c_node :Tree
+>       467: Null *Type(boolean) :boolean
+>       468: Label *lwhile_515768123_start :void
+>       469: Call 466 *GetHas_Left() :boolean
+>       470: NBranch 469 *lwhile_515768123_end :void
+>       471: Call 466 *GetLeft() :Tree
+>       472: Call 471 *GetKey() :int
+>       473: Arg 472 *0 :int
+>       474: Call 466 *SetKey(473) :boolean
+>       475: VarAssg 474 *ntb :boolean
+>       476: VarAssg 466 *p_node :Tree
+>       477: Call 466 *GetLeft() :Tree
+>       478: VarAssg 477 *c_node :Tree
+>       479: Goto *lwhile_515768123_start :void
+>       480: Label *lwhile_515768123_end :void
+>       481: Unify 467 475 :boolean
+>       482: Unify 465 476 :Tree
+>       483: Unify 466 478 :Tree
+>       484: This :Tree
+>       485: Member 484 *my_null :Tree
+>       486: Arg 485 *0 :Tree
+>       487: Call 482 *SetLeft(486) :boolean
+>       488: VarAssg 487 *ntb :boolean
+>       489: Boolean *false :boolean
+>       490: Arg 489 *0 :boolean
+>       491: Call 482 *SetHas_Left(490) :boolean
+>       492: VarAssg 491 *ntb :boolean
+>       493: Boolean *true :boolean
+>       494: Return 493 :void
+>     method Search:
+>       495: Parameter *0 :int
+>       496: VarAssg 495 *v_key :int
+>       497: Null *Type(Tree) :Tree
+>       498: Null *Type(int) :int
+>       499: Null *Type(boolean) :boolean
+>       500: Null *Type(int) :int
+>       501: This :Tree
+>       502: VarAssg 501 *current_node :Tree
+>       503: Boolean *true :boolean
+>       504: VarAssg 503 *cont :boolean
+>       505: Int *0 :int
+>       506: VarAssg 505 *ifound :int
+>       507: Label *lwhile_1270843969_start :void
+>       508: NBranch 504 *lwhile_1270843969_end :void
+>       509: Call 502 *GetKey() :int
+>       510: VarAssg 509 *key_aux :int
+>       511: Lt 496 510 :boolean
+>       512: NBranch 511 *lif_202233921_else :void
+>       513: Call 502 *GetHas_Left() :boolean
+>       514: NBranch 513 *lif_1626380693_else :void
+>       515: Call 502 *GetLeft() :Tree
+>       516: VarAssg 515 *current_node :Tree
+>       517: Goto *lif_1626380693_done :void
+>       518: Label *lif_1626380693_else :void
+>       519: Boolean *false :boolean
+>       520: VarAssg 519 *cont :boolean
+>       521: Label *lif_1626380693_done :void
+>       522: Unify 504 520 :boolean
+>       523: Unify 516 502 :Tree
+>       524: Goto *lif_202233921_done :void
+>       525: Label *lif_202233921_else :void
+>       526: Lt 510 496 :boolean
+>       527: NBranch 526 *lif_1408448235_else :void
+>       528: Call 502 *GetHas_Right() :boolean
+>       529: NBranch 528 *lif_77244764_else :void
+>       530: Call 502 *GetRight() :Tree
+>       531: VarAssg 530 *current_node :Tree
+>       532: Goto *lif_77244764_done :void
+>       533: Label *lif_77244764_else :void
+>       534: Boolean *false :boolean
+>       535: VarAssg 534 *cont :boolean
+>       536: Label *lif_77244764_done :void
+>       537: Unify 504 535 :boolean
+>       538: Unify 531 502 :Tree
+>       539: Goto *lif_1408448235_done :void
+>       540: Label *lif_1408448235_else :void
+>       541: Int *1 :int
+>       542: VarAssg 541 *ifound :int
+>       543: Boolean *false :boolean
+>       544: VarAssg 543 *cont :boolean
+>       545: Label *lif_1408448235_done :void
+>       546: Unify 537 544 :boolean
+>       547: Unify 506 542 :int
+>       548: Unify 538 502 :Tree
+>       549: Label *lif_202233921_done :void
+>       550: Unify 522 546 :boolean
+>       551: Unify 506 547 :int
+>       552: Unify 523 548 :Tree
+>       553: Goto *lwhile_1270843969_start :void
+>       554: Label *lwhile_1270843969_end :void
+>       555: Unify 506 551 :int
+>       556: Unify 500 510 :int
+>       557: Unify 504 550 :boolean
+>       558: Unify 502 552 :Tree
+>       559: Return 555 :void
+>     method Print:
+>       560: Null *Type(boolean) :boolean
+>       561: Null *Type(Tree) :Tree
+>       562: This :Tree
+>       563: VarAssg 562 *current_node :Tree
+>       564: This :Tree
+>       565: Arg 563 *0 :Tree
+>       566: Call 564 *RecPrint(565) :boolean
+>       567: VarAssg 566 *ntb :boolean
+>       568: Boolean *true :boolean
+>       569: Return 568 :void
+>     method RecPrint:
+>       570: Parameter *0 :Tree
+>       571: VarAssg 570 *node :Tree
+>       572: Null *Type(boolean) :boolean
+>       573: Call 571 *GetHas_Left() :boolean
+>       574: NBranch 573 *lif_1172625760_else :void
+>       575: This :Tree
+>       576: Call 571 *GetLeft() :Tree
+>       577: Arg 576 *0 :Tree
+>       578: Call 575 *RecPrint(577) :boolean
+>       579: VarAssg 578 *ntb :boolean
+>       580: Goto *lif_1172625760_done :void
+>       581: Label *lif_1172625760_else :void
+>       582: Boolean *true :boolean
+>       583: VarAssg 582 *ntb :boolean
+>       584: Label *lif_1172625760_done :void
+>       585: Unify 579 583 :boolean
+>       586: Call 571 *GetKey() :int
+>       587: Print 586 :void
+>       588: Call 571 *GetHas_Right() :boolean
+>       589: NBranch 588 *lif_863719801_else :void
+>       590: This :Tree
+>       591: Call 571 *GetRight() :Tree
+>       592: Arg 591 *0 :Tree
+>       593: Call 590 *RecPrint(592) :boolean
+>       594: VarAssg 593 *ntb :boolean
+>       595: Goto *lif_863719801_done :void
+>       596: Label *lif_863719801_else :void
+>       597: Boolean *true :boolean
+>       598: VarAssg 597 *ntb :boolean
+>       599: Label *lif_863719801_done :void
+>       600: Unify 594 598 :boolean
+>       601: Boolean *true :boolean
+>       602: Return 601 :void
+>     method accept:
+>       603: Parameter *0 :Visitor
+>       604: VarAssg 603 *v :Visitor
+>       605: Null *Type(int) :int
+>       606: Int *333 :int
+>       607: Print 606 :void
+>       608: This :Tree
+>       609: Arg 608 *0 :Tree
+>       610: Call 604 *visit(609) :int
+>       611: VarAssg 610 *nti :int
+>       612: Int *0 :int
+>       613: Return 612 :void
+>   class Visitor:
+>     method visit:
+>       614: Parameter *0 :Tree
+>       615: VarAssg 614 *n :Tree
+>       616: Null *Type(int) :int
+>       617: Call 615 *GetHas_Right() :boolean
+>       618: NBranch 617 *lif_1446427658_else :void
+>       619: This :Visitor
+>       620: Call 615 *GetRight() :Tree
+>       621: MemberAssg 619 620 *r :Tree
+>       622: This :Visitor
+>       623: Member 622 *r :Tree
+>       624: This :Visitor
+>       625: Arg 624 *0 :Visitor
+>       626: Call 623 *accept(625) :int
+>       627: VarAssg 626 *nti :int
+>       628: Goto *lif_1446427658_done :void
+>       629: Label *lif_1446427658_else :void
+>       630: Int *0 :int
+>       631: VarAssg 630 *nti :int
+>       632: Label *lif_1446427658_done :void
+>       633: Unify 627 631 :int
+>       634: Call 615 *GetHas_Left() :boolean
+>       635: NBranch 634 *lif_594763966_else :void
+>       636: This :Visitor
+>       637: Call 615 *GetLeft() :Tree
+>       638: MemberAssg 636 637 *l :Tree
+>       639: This :Visitor
+>       640: Member 639 *l :Tree
+>       641: This :Visitor
+>       642: Arg 641 *0 :Visitor
+>       643: Call 640 *accept(642) :int
+>       644: VarAssg 643 *nti :int
+>       645: Goto *lif_594763966_done :void
+>       646: Label *lif_594763966_else :void
+>       647: Int *0 :int
+>       648: VarAssg 647 *nti :int
+>       649: Label *lif_594763966_done :void
+>       650: Unify 644 648 :int
+>       651: Int *0 :int
+>       652: Return 651 :void
+>   class MyVisitor:
+>     method visit:
+>       653: Parameter *0 :Tree
+>       654: VarAssg 653 *n :Tree
+>       655: Null *Type(int) :int
+>       656: Call 654 *GetHas_Right() :boolean
+>       657: NBranch 656 *lif_1809083424_else :void
+>       658: This :MyVisitor
+>       659: Call 654 *GetRight() :Tree
+>       660: MemberAssg 658 659 *r :Tree
+>       661: This :MyVisitor
+>       662: Member 661 *r :Tree
+>       663: This :MyVisitor
+>       664: Arg 663 *0 :MyVisitor
+>       665: Call 662 *accept(664) :int
+>       666: VarAssg 665 *nti :int
+>       667: Goto *lif_1809083424_done :void
+>       668: Label *lif_1809083424_else :void
+>       669: Int *0 :int
+>       670: VarAssg 669 *nti :int
+>       671: Label *lif_1809083424_done :void
+>       672: Unify 666 670 :int
+>       673: Call 654 *GetKey() :int
+>       674: Print 673 :void
+>       675: Call 654 *GetHas_Left() :boolean
+>       676: NBranch 675 *lif_1191632942_else :void
+>       677: This :MyVisitor
+>       678: Call 654 *GetLeft() :Tree
+>       679: MemberAssg 677 678 *l :Tree
+>       680: This :MyVisitor
+>       681: Member 680 *l :Tree
+>       682: This :MyVisitor
+>       683: Arg 682 *0 :MyVisitor
+>       684: Call 681 *accept(683) :int
+>       685: VarAssg 684 *nti :int
+>       686: Goto *lif_1191632942_done :void
+>       687: Label *lif_1191632942_else :void
+>       688: Int *0 :int
+>       689: VarAssg 688 *nti :int
+>       690: Label *lif_1191632942_done :void
+>       691: Unify 685 689 :int
+>       692: Int *0 :int
+>       693: Return 692 :void
+> 
