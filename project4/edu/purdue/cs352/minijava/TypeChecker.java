@@ -59,6 +59,11 @@ public class TypeChecker {
             handleClass(cless);
         }
 
+        for(SSAClass cless: classes) {
+            ClassDecl cd = (ClassDecl)cless.getASTNode();
+            String name = cd.getName();
+            handleStats(cless.getMethodsOrdered(), name);
+        }
         // Deal with Main
         handleStats(prog.getMain());
     
@@ -67,35 +72,6 @@ public class TypeChecker {
     public void handleClass(SSAClass cless) {
         ClassDecl cd = (ClassDecl)cless.getASTNode();
         String name = cd.getName();
-        handleStats(cless.getMethodsOrdered(), name); // possibly bad place?
-    }
-
-    public void addClass(SSAClass cless) {
-        ClassDecl cd = (ClassDecl)cless.getASTNode();
-        String name = cd.getName();
-        String eggstends = cd.getExtends();
-        SSAClass supper;
-        System.out.println("Handling Class " + name);
-        if(types.containsKey(name)) {
-            return;
-        }
-
-        if(eggstends != null) { 
-            // fix this to handle if the class wasn't add yet 
-            supper = prog.getClass(eggstends);
-            if(supper == null) 
-                throw new Error("Super Class " + eggstends + " does not exist!");
-            // make sure it has been added first
-            System.out.println("Handling Super Class of " + name);
-            addClass(supper);
-            System.out.println("Finished Handling Super of "+ name);
-            String supName = ((ClassDecl)supper.getASTNode()).getName();
-            ObjectType supType = (ObjectType)types.get(supName);
-            types.put(name, new ObjectType(name, supType));
-            System.out.println(name + " extends " + eggstends + " type is " + supType.getName());
-        } else {
-            types.put(name, new ObjectType(name, defaultSuper())); 
-        }
 
         Map<String, String> dupList = new HashMap<String,String>();
         for(SSAField field : cless.getFieldsOrdered()) {
@@ -114,19 +90,49 @@ public class TypeChecker {
                 throw new Error("Duplicate Method:" + md.getName());
             }
             handleMethod(method, name);
-            System.out.println("Method name " + md.getName());
+            //System.out.println("Method name " + md.getName());
             dupList.put(md.getName(), md.getName());
         }
-}
+    }
+
+    public void addClass(SSAClass cless) {
+        ClassDecl cd = (ClassDecl)cless.getASTNode();
+        String name = cd.getName();
+        String eggstends = cd.getExtends();
+        SSAClass supper;
+        //System.out.println("Handling Class " + name);
+        if(types.containsKey(name)) {
+            return;
+        }
+
+        if(eggstends != null) { 
+            // fix this to handle if the class wasn't add yet 
+            supper = prog.getClass(eggstends);
+            if(supper == null) 
+                throw new Error("Super Class " + eggstends + " does not exist!");
+            // make sure it has been added first
+            //System.out.println("Handling Super Class of " + name);
+            addClass(supper);
+            //System.out.println("Finished Handling Super of "+ name);
+            String supName = ((ClassDecl)supper.getASTNode()).getName();
+            ObjectType supType = (ObjectType)types.get(supName);
+            types.put(name, new ObjectType(name, supType));
+            //System.out.println(name + " extends " + eggstends + " type is " + supType.getName());
+        } else {
+            types.put(name, new ObjectType(name, defaultSuper())); 
+        }
+
+    }
 
     public void handleField(SSAField field) {
         VarDecl vd = field.getField();
         Type type = vd.getType();
         field.setType(types.get(type.getName()));
-        System.out.println("name:" + vd.getName() + " "+type);
+        //System.out.println("name:" + vd.getName() + " "+type);
     }
 
     public void handleMethod(SSAMethod method, String cless) {
+        //System.out.println("Handling method:" + method.getMethod().getName());
         if(method.getMain() == null) {
             //Parameters
             MethodDecl meth = method.getMethod();
@@ -136,14 +142,16 @@ public class TypeChecker {
 
             for(Parameter param : params) {
                 type = param.getType();
-                System.out.println("name:" + param.getName() + " " + param.getType());
+                //System.out.println("Parameter name:" + param.getName() + " type " + param.getType().getName());
+                //System.out.println("Was null:" + (types.get(type.getName()) == null));
                 ptypes.add(types.get(type.getName()));
             }
             method.setParamTypes(ptypes);
-            System.out.println("name:" + meth.getName() + " " + meth.getType());
+            //System.out.println("Method name:" + meth.getName() + " " + meth.getType());
             type = meth.getType();
             method.setRetType(types.get(type.getName()));
-
+            //System.out.println("Setting type " + types.get(type.getName()));
+            //System.out.println("Finished Handling method:" + method.getMethod().getName());
         }
 
     }
@@ -209,7 +217,7 @@ public class TypeChecker {
         StaticType type = null;
         StaticType req;
         StaticType found;
-
+        //System.out.println("Adding Type operation is " + oper + " for class " + cless + " method:" + method);
         switch(oper) {
             case Int:
                 type = types.get("int");
@@ -226,7 +234,7 @@ public class TypeChecker {
                 right = ssa.getRight();
                 StaticType t1 = left.getType();
                 StaticType t2 = right.getType();
-                System.out.println("t1:" + t1 + " t2:"+t2);
+                //System.out.println("t1:" + t1 + " t2:"+t2);
 
                 // add instanceofs for ObjectTypes
                 if(t1 instanceof ObjectType && t2 instanceof ObjectType) {
@@ -257,7 +265,6 @@ public class TypeChecker {
                 type = types.get(t.getName());
                 break;
             case Arg:
-                int in = (int)ssa.getSpecial();
                 left = ssa.getLeft();
                 type = left.getType();
                 break;
@@ -291,17 +298,23 @@ public class TypeChecker {
                 left = ssa.getLeft();
                 ObjectType obj = (ObjectType)left.getType();
                 thisClass = prog.getClass(obj.toString());
+                //System.out.println("Class " + obj + " Method " + call.getMethod());
                 meth = thisClass.getMethod(prog, call.getMethod());
+            
                 List<SSAStatement> args = call.getArgs();
                 for(SSAStatement arg : args) {
                     if(arg.getOp() != Op.Arg) throw new Error("An argument of " + call.getMethod() + " was not an Argument SSAStatement");
                     int index = (int)arg.getSpecial();
                     found = arg.getType();
                     req = meth.getParamType(index);
-                    checkTypes(req, found);
-                }
+              
+                    //System.out.println("Types size:" +  meth.getParamTypes().size());
+                    //System.out.println("Method " + call.getMethod()+" Arg " + index + " Found is " + found + " Req is " + (req == null));
 
-                System.out.println("class is " + obj.toString() + " Method is " + call.getMethod() + " Prim:" + meth.getRetType());
+                    checkTypes(req, found);
+                } 
+
+                //System.out.println("class is " + obj.toString() + " Method is " + call.getMethod() + " Return type:" + meth.getRetType());
                 type = meth.getRetType();
                 break;
             case Return:
@@ -442,8 +455,8 @@ public class TypeChecker {
         left = ssa.getLeft();
         name = (String)ssa.getSpecial();
         SSAClass cl = prog.getClass(cless);
-        SSAField fd = cl.getField(name);
-
+        SSAField fd = cl.getField(prog, name);
+        ////System.out.println("FindType: Name is " + name);
         if(fd == null) {
             meth = cl.getMethod(prog, method);
             MethodDecl md = meth.getMethod();
@@ -472,7 +485,7 @@ public class TypeChecker {
         } else { 
             type = fd.getType();
         }
-        System.out.println("name is " + name + " class is " + cless + " method is " + method);
+        //System.out.println("name is " + name + " class is " + cless + " method is " + method);
         return type;
     }
 
