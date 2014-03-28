@@ -295,6 +295,8 @@ public class TypeChecker {
                     if(arg.getOp() != Op.Arg) 
                         throw new Error("An argument of " + call.getMethod() + " was not an Argument SSAStatement");
                     int index = (int)arg.getSpecial();
+                    if(index >= meth.getParamTypes().size()) 
+                        throw new Error("Wrong Number of Arguments for " + call.getMethod());
                     found = arg.getType();
                     req = meth.getParamType(index);
                     checkTypes(req, found, call.getMethod() + ":Argument type was wrong");
