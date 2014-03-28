@@ -3,8 +3,8 @@ echo "------- RUNNING EXAMPLE TEST CASES --------"
 for f in `ls ../examples/*.java`
 do
 	echo -n $f ": "
-	../../project-solution/bin/mjcompile-ssa -t $f > out1 2> err1
-	/Development/cs352/project4/project/bin/mjcompile-ssa -t $f > out2 2> err2
+	../../project4C/bin/mjcompile-ssa -t $f > out1 2> err1
+	../bin/mjcompile-ssa -t $f > out2 2> err2
 	diff out1 out2 > out3
 
 	if [ -s out3 ] 

@@ -285,8 +285,14 @@ public class TypeChecker {
                 
                 SSACall call = (SSACall)ssa.getSpecial();
                 left = ssa.getLeft();
-                ObjectType obj = (ObjectType)left.getType();
-                thisClass = prog.getClass(obj.toString());
+                if(left.getType() == null){
+                    name = "";
+                    if(left.getASTNode() instanceof NewObjectExp) 
+                        name = ((NewObjectExp)left.getASTNode()).getName();
+                    throw new Error("Unknown Type " + name);
+                }
+                name = left.getType().toString();
+                thisClass = prog.getClass(name);
     
                 meth = thisClass.getMethod(prog, call.getMethod());
             
@@ -323,8 +329,8 @@ public class TypeChecker {
                     checkTypes(req, found, "Tried to access the length member of a non-array variable");
                     type = types.get("int");
                 } else {
-                    ObjectType objType = (ObjectType) left.getType();
-                    type = findType(ssa, objType.toString(), method);
+                    name = left.getType().toString();
+                    type = findType(ssa, name, method);
                 }
 
                 break;
@@ -351,8 +357,12 @@ public class TypeChecker {
             case MemberAssg:
                 left = ssa.getLeft();
                 right = ssa.getRight();
-                ObjectType memType = (ObjectType)left.getType();
-                req = findType(ssa, memType.toString(), method);
+                name = (String)ssa.getSpecial();
+
+                String memType = left.getType().toString();
+                if(name.equals("length") && memType.equals("int[]")) 
+                    throw new Error("Can't assign a value to an array's length member");
+                req = findType(ssa, memType, method);
                 found = right.getType();
                 checkTypes(req, found, "Member Assignement to the wrong type");
                 type = req;
@@ -441,6 +451,8 @@ public class TypeChecker {
         name = (String)ssa.getSpecial();
         // find it's class and get it's a member variable
         SSAClass cl = prog.getClass(cless);
+        if(cl == null)
+            throw new Error(cless + " does not exist");
         SSAField fd = cl.getField(prog, name);
 
         // if it's not a member field then check the methodDecl for params and vars
