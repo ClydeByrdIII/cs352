@@ -15,6 +15,7 @@ class BT {
 	int nti ;
 
 	root = new Tree();
+	root.key;
 	ntb = root.Init(16);
 	ntb = root.Print();
 	System.out.println(100000000);

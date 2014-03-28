@@ -90,7 +90,7 @@ public class TypeChecker {
                 throw new Error("Duplicate Method:" + md.getName());
             }
             handleMethod(method, name);
-            //System.out.println("Method name " + md.getName());
+
             dupList.put(md.getName(), md.getName());
         }
     }
@@ -100,7 +100,7 @@ public class TypeChecker {
         String name = cd.getName();
         String eggstends = cd.getExtends();
         SSAClass supper;
-        //System.out.println("Handling Class " + name);
+
         if(types.containsKey(name)) {
             return;
         }
@@ -111,13 +111,13 @@ public class TypeChecker {
             if(supper == null) 
                 throw new Error("Super Class " + eggstends + " does not exist!");
             // make sure it has been added first
-            //System.out.println("Handling Super Class of " + name);
+
             addClass(supper);
-            //System.out.println("Finished Handling Super of "+ name);
+
             String supName = ((ClassDecl)supper.getASTNode()).getName();
             ObjectType supType = (ObjectType)types.get(supName);
             types.put(name, new ObjectType(name, supType));
-            //System.out.println(name + " extends " + eggstends + " type is " + supType.getName());
+
         } else {
             types.put(name, new ObjectType(name, defaultSuper())); 
         }
@@ -128,11 +128,10 @@ public class TypeChecker {
         VarDecl vd = field.getField();
         Type type = vd.getType();
         field.setType(types.get(type.getName()));
-        //System.out.println("name:" + vd.getName() + " "+type);
     }
 
     public void handleMethod(SSAMethod method, String cless) {
-        //System.out.println("Handling method:" + method.getMethod().getName());
+
         if(method.getMain() == null) {
             //Parameters
             MethodDecl meth = method.getMethod();
@@ -142,16 +141,13 @@ public class TypeChecker {
 
             for(Parameter param : params) {
                 type = param.getType();
-                //System.out.println("Parameter name:" + param.getName() + " type " + param.getType().getName());
-                //System.out.println("Was null:" + (types.get(type.getName()) == null));
                 ptypes.add(types.get(type.getName()));
             }
             method.setParamTypes(ptypes);
-            //System.out.println("Method name:" + meth.getName() + " " + meth.getType());
+
             type = meth.getType();
             method.setRetType(types.get(type.getName()));
-            //System.out.println("Setting type " + types.get(type.getName()));
-            //System.out.println("Finished Handling method:" + method.getMethod().getName());
+
         }
 
     }
@@ -217,7 +213,7 @@ public class TypeChecker {
         StaticType type = null;
         StaticType req;
         StaticType found;
-        //System.out.println("Adding Type operation is " + oper + " for class " + cless + " method:" + method);
+
         switch(oper) {
             case Int:
                 type = types.get("int");
@@ -226,7 +222,7 @@ public class TypeChecker {
                 left = ssa.getLeft();
                 req = types.get("int");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Print Argument was not an Int");
                 type = types.get("void");
                 break;
             case Unify:
@@ -234,7 +230,6 @@ public class TypeChecker {
                 right = ssa.getRight();
                 StaticType t1 = left.getType();
                 StaticType t2 = right.getType();
-                //System.out.println("t1:" + t1 + " t2:"+t2);
 
                 // add instanceofs for ObjectTypes
                 if(t1 instanceof ObjectType && t2 instanceof ObjectType) {
@@ -281,7 +276,7 @@ public class TypeChecker {
                 left = ssa.getLeft();
                 req = types.get("int");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "size was not an int");
                 type = types.get("int[]");
                 break;
             case Label:
@@ -290,15 +285,19 @@ public class TypeChecker {
                 break;
             case Branch:
             case NBranch:
+                left = ssa.getLeft();
+                req = types.get("boolean");
+                found = left.getType();
+                checkTypes(req, found, "If or While condition was not a boolean");
                 type = types.get("void");
                 break;
             case Call:
-                // what if call doesn't exist?
+                
                 SSACall call = (SSACall)ssa.getSpecial();
                 left = ssa.getLeft();
                 ObjectType obj = (ObjectType)left.getType();
                 thisClass = prog.getClass(obj.toString());
-                //System.out.println("Class " + obj + " Method " + call.getMethod());
+    
                 meth = thisClass.getMethod(prog, call.getMethod());
             
                 List<SSAStatement> args = call.getArgs();
@@ -307,14 +306,9 @@ public class TypeChecker {
                     int index = (int)arg.getSpecial();
                     found = arg.getType();
                     req = meth.getParamType(index);
-              
-                    //System.out.println("Types size:" +  meth.getParamTypes().size());
-                    //System.out.println("Method " + call.getMethod()+" Arg " + index + " Found is " + found + " Req is " + (req == null));
-
-                    checkTypes(req, found);
+                    checkTypes(req, found, call.getMethod() + ":Argument type was wrong");
                 } 
 
-                //System.out.println("class is " + obj.toString() + " Method is " + call.getMethod() + " Return type:" + meth.getRetType());
                 type = meth.getRetType();
                 break;
             case Return:
@@ -323,7 +317,7 @@ public class TypeChecker {
                 thisClass = prog.getClass(cless);
                 meth = thisClass.getMethod(prog, method);
                 req = meth.getRetType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Method " + method + "'s return's was wrong");
                 type = types.get("void");
                 break;
             case Member:
@@ -331,13 +325,13 @@ public class TypeChecker {
                 name = (String)ssa.getSpecial();
 
                 if(name.equals("length")) {
-                    left = ssa.getLeft();
                     req = types.get("int[]");
                     found = left.getType();
-                    checkTypes(req, found);
+                    checkTypes(req, found, "Tried to access the length variable of a non-array variable");
                     type = types.get("int");
                 } else {
-                    type = findType(ssa, cless, method);
+                    ObjectType objType = (ObjectType) left.getType();
+                    type = findType(ssa, objType.toString(), method);
                 }
 
                 break;
@@ -348,17 +342,17 @@ public class TypeChecker {
                 right = ssa.getRight();
                 req = types.get("int[]");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "trying to access an index of a non array variable");
                 req = types.get("int");
                 found = right.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "index was not an int");
                 type = req;
                 break;
             case VarAssg:
                 left = ssa.getLeft();
                 req = findType(ssa, cless, method);
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Variable Assignement to the wrong type");
                 type = req;
                 break;
             case MemberAssg:
@@ -366,7 +360,7 @@ public class TypeChecker {
 
                 req = findType(ssa, cless, method);
                 found = right.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Member Assignement to the wrong type");
                 type = req;
                 break;
             case IndexAssg:
@@ -376,21 +370,21 @@ public class TypeChecker {
                 // check array
                 req = types.get("int[]");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Index Assignement to a variable that's not an int array");
                 // check value
                 req = types.get("int");
                 found = right.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Index Assignement with a non-int value");
                 // check index
                 found = index.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Index Assignement with a non-int index");
                 type = types.get("int");
                 break;
             case Not:
                 left = ssa.getLeft();
                 req = types.get("boolean");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "left value in Not Expression was not a boolean");
                 type = types.get("boolean");
                 break;
             case Eq:             
@@ -405,9 +399,9 @@ public class TypeChecker {
                 right = ssa.getRight();
                 req = types.get("int");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "left value in Comparison was not an int");
                 found = right.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "right value in Comparison was not an int");
                 type = types.get("boolean");
                 break;
             case And:
@@ -416,9 +410,9 @@ public class TypeChecker {
                 right = ssa.getRight();
                 req = types.get("boolean");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "left value in Conditional Expression was not a boolean");
                 found = right.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "left value in Conditional Expression was not a boolean");
                 type = req;
                 break;
             case Plus:           
@@ -430,9 +424,9 @@ public class TypeChecker {
                 right = ssa.getRight();
                 req = types.get("int");
                 found = left.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "left value in Arithmetic Expression was not an int");
                 found = right.getType();
-                checkTypes(req, found);
+                checkTypes(req, found, "Right value in Arithmetic Expression was not an int");
                 type = req;
                 break;
             default:
@@ -456,7 +450,7 @@ public class TypeChecker {
         name = (String)ssa.getSpecial();
         SSAClass cl = prog.getClass(cless);
         SSAField fd = cl.getField(prog, name);
-        ////System.out.println("FindType: Name is " + name);
+
         if(fd == null) {
             meth = cl.getMethod(prog, method);
             MethodDecl md = meth.getMethod();
@@ -480,12 +474,11 @@ public class TypeChecker {
             }
 
             if(index == -1 && index2 == -1) throw new Error(name + " is undefined!");
-            //else if(index > -1 && index2 > -1) throw new Error(name + " is defined twice!");
 
         } else { 
             type = fd.getType();
         }
-        //System.out.println("name is " + name + " class is " + cless + " method is " + method);
+
         return type;
     }
 
@@ -493,16 +486,8 @@ public class TypeChecker {
         return (ObjectType)types.get("Object");
     }
 
-    public void checkArgs(String cless, String method, int index, StaticType type) {
-        
-        SSAClass cl = prog.getClass(cless);
-        SSAMethod meth = cl.getMethod(prog, method);
-        StaticType paramType = meth.getParamType(index);
-        checkTypes(paramType, type);
-    }
-
     // checks if type is a subtype of paramType
-    public void checkTypes(StaticType paramType, StaticType type) {
+    public void checkTypes(StaticType paramType, StaticType type, String errorMsg) {
         if(paramType instanceof ObjectType && type instanceof ObjectType) {
             ObjectType obj = (ObjectType)paramType;
             ObjectType obj2 = (ObjectType)type;
@@ -510,6 +495,6 @@ public class TypeChecker {
         } else {
             if(paramType.commonSupertype(type) != null) return;
         }
-        throw new Error("Wrong type");
+        throw new Error(errorMsg);
     }
 }
