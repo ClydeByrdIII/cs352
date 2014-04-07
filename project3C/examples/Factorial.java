@@ -14,5 +14,10 @@ class Fac {
 	    num_aux = num * (this.ComputeFac(num-1)) ;
 	return num_aux ;
     }
-
+    public int comp() {
+        int x;
+        int y;
+        x = this.f(y+1) + 2;
+        return 0;
+    }
 }

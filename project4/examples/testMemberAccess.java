@@ -19,7 +19,7 @@ class TV {
 	root = new Tree();
 	root.key;
 	root.key = 5;
-	ntb = root.Init(16);
+        ntb = root.Init(16);
 	ntb = root.Print();
 	System.out.println(100000000);
 	ntb = root.Insert(8) ;
@@ -57,7 +57,7 @@ class Tree{
     boolean has_left ;
     boolean has_right ;
     Tree my_null ;
-
+    int length;
 
 
     //Tree new_node ;
