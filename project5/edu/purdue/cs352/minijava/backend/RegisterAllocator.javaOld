@@ -1,0 +1,936 @@
+package edu.purdue.cs352.minijava.backend;
+
+import java.util.*;
+
+import edu.purdue.cs352.minijava.ssa.*;
+
+import static edu.purdue.cs352.minijava.ssa.SSAStatement.*;
+
+public class RegisterAllocator {
+    /* a "variable" is just a set of SSA statements. We alias it (sort of) to
+     * make this explicit. A Variable is thus equivalently a definition of
+     * def(v). */
+    static class Variable {
+        public final SSAStatement master; // just for debugging
+        public final Set<SSAStatement> v;
+        public Variable(SSAStatement s) {
+            master = s;
+            v = new HashSet<SSAStatement>();
+            v.add(s);
+        }
+
+        public SSAStatement getSSA() {
+            return master;
+        } 
+
+        public SSAStatement getSSA(int index) {
+            for(SSAStatement s : v) {
+                if(s.getIndex() == index)
+                    return s;
+            }
+            return null;
+        } 
+
+        public Set<SSAStatement> getUnifedSSA(){
+            return v;
+        }
+
+        public boolean equals(SSAStatement ssa) {
+            return (ssa.getIndex() == master.getIndex());
+        }
+
+        public boolean contains(SSAStatement ssa) {
+            return v.contains(ssa);
+        }
+
+        public boolean contains(int index) {
+            for(SSAStatement s : v) {
+                if(s.getIndex() == index)
+                    return true;
+            }
+            return false;
+        }
+
+        public String toString() {
+            StringBuilder string = new StringBuilder("Master:" +s);
+            for(SSAStatement s: v){
+                string.add()
+            }
+        }
+    }
+
+    /* you will additionally need classes for at least:
+     * Nodes in the control flow graph
+     * Nodes in the variable interference graph
+     */
+
+    // a node in the control flow graph
+    class CFNode {
+        // FILLIN...
+        // will need at least pred, succ, def[n], use[n], in[n] and out[n]
+        HashSet<Variable> defs, ins, outs, uses;
+        HashSet<Variable> preds, succs;
+        Variable master;
+        SSAStatement ssa;
+
+        public CFNode(Variable var) {
+            master = var;
+            preds = new HashSet<Variable>>();
+            succs = new HashSet<Variable>();
+            defs = new HashMap<Integer, HashSet<Variable>>();
+            uses = new HashMap<Integer, HashSet<Variable>>();
+            ins = new HashMap<Integer, HashSet<Variable>>();
+            outs = new HashMap<Integer, HashSet<Variable>>();
+
+            for(SSAStatement s : master.v) {
+                preds.put(s.getIndex(), new HashSet<InfoNode>());
+                succs.put(s.getIndex(), new HashSet<InfoNode>());
+                defs.put(s.getIndex(), new HashSet<Variable>());
+                uses.put(s.getIndex(), new HashSet<Variable>());
+                ins.put(s.getIndex(), new HashSet<Variable>());
+                outs.put(s.getIndex(), new HashSet<Variable>());
+            }
+        }
+
+    }
+
+    // a node in the interference graph (a temporary)
+    class TempNode {
+        // FILLIN...
+       /* HashSet<Variable> adjacencylist;
+        InfoNode node;
+        int color;
+        Variable causedSpill;
+        public TempNode(InfoNode node){
+            this.node = node;
+            adjacencylist = new HashSet<Variable>();
+            for(Map.Entry<Integer, HashSet<Variable>> entry : node.getCFNode().ins.entrySet()){
+                for(Variable var : entry.getValue()) {
+                    adjacencylist.add(var);
+                }
+            }
+            color = -1;
+        }
+
+        public HashSet<Variable> getAdjacencyList() {
+            return adjacencylist;
+        }
+
+        public InfoNode getInfoNode() {
+            return node;
+        }
+
+        public void setAdjacencyList(HashSet<Variable> list) {
+            adjacencylist = list;
+        }
+
+        public void setColor(int color) {
+            this.color = color;
+        }
+
+        public int getColor() {
+            return color;
+        }
+
+        public void setSpillCause(Variable caused) {
+            causedSpill = caused;
+        }
+
+        public int getDegree() {
+            return adjacencylist.size();
+        }
+        public TempNode clone() {
+            return new TempNode(node);
+        } */
+    }
+
+    // a list of all ssastatments and their corresponding variables/cfnodes
+/*
+    class InfoNode {
+        CFNode node;
+        Variable var;
+        SSAStatement ssa;
+        boolean isUnified;
+        
+        public InfoNode(SSAStatement ssa) {
+            this.ssa = ssa;
+        }
+        public InfoNode(SSAStatement ssa, Variable var) {
+            this.var = var;
+            this.ssa = ssa;
+        }
+
+        public CFNode getCFNode() {
+            return node;
+        } 
+
+        public Variable getVariable() {
+            return var;
+        } 
+        public SSAStatement getSSA() {
+            return ssa;
+        } 
+        public void setCFNode(CFNode node) {
+            this.node = node;
+        } 
+
+        public void setVariable(Variable var) {
+            this.var = var;
+        } 
+        public void setSSA(SSAStatement ssa) {
+            this.ssa = ssa;
+        } 
+
+        public boolean isUnified() {
+            return isUnified;
+        }
+
+        public void setUnified(boolean unified) {
+            isUnified = unified;
+        }
+    } */
+/*
+    class Graph {
+        Map<Integer, HashSet<TempNode>> adj;
+        int size;
+        public Graph() {
+            adj = new HashMap<Integer, HashSet<TempNode>>();
+        }
+
+        public void addVertex(TempNode temp) {
+            HashSet<TempNode> set;
+            int index = temp.getInfoNode().getSSA().getIndex();
+            if(!adj.containsKey(index)) {
+                set = new HashSet<TempNode>();
+            } else {
+                set = adj.get(index);
+            }
+
+            for(Variable var : temp.getAdjacencyList()) {
+                set.add(findTempNode(var)); 
+            }
+
+            adj.put(index, set);
+            size++;
+        }
+        public TempNode findDegreeLessNode(int k) {
+            TempNode degree;
+            for(Integer i : adj.keySet()){
+                degree = findTempNode(i);
+                if(this.getDegree(degree) < k) {
+                    return degree;
+                }
+            }
+
+            for(Integer i : adj.keySet()){
+                degree = findTempNode(i);
+                return degree;
+            }
+
+            return null;
+        }
+
+        public TempNode leastUsedNode() {
+            TempNode leastUsed = null ,used;
+            int min = 999999, curr, save = -1;
+            HashSet<Variable> set;
+            HashMap<Integer,Integer> minMap = new HashMap<Integer, Integer>();
+            for(Integer i : adj.keySet()) {
+                curr = this.getDegree(findTempNode(i)); 
+                if(curr < min) { 
+                    min = curr;
+                    save = i;
+                }
+            }
+            return findTempNode(save);
+        }
+
+        public int getDegree(TempNode temp) {
+            int index = temp.getInfoNode().getSSA().getIndex();
+            if(adj.containsKey(index)) {
+                return adj.get(index).size();
+            } 
+            return -1;
+        }
+
+        public void remove(TempNode temp) {
+            int index = temp.getInfoNode().getSSA().getIndex();
+             if(adj.containsKey(index)) {
+                adj.remove(index);
+                for(HashSet<TempNode> set : adj.values()){
+                    set.remove(temp);
+                }
+                size--;
+            }
+        }  
+
+        public boolean isEmpty() {
+            if(size > 0) return false;
+            return true;
+        }
+
+        public void clear() {
+            size = 0;
+            adj.clear();
+        }
+
+    }*/
+    // the block we're performing allocation over
+    List<SSAStatement> block;
+
+    /* FILLIN: You may additionally need fields for, e.g.,
+     * The number of spills you have performed (to fill the special field of Store and Load operations),
+     * Your list of variables,
+     * Your SSAStatement->variable binding (def(v)),
+     * Your list of CFG nodes,
+     * Your SSAProgram->CFG node binding,
+     * use(v),
+     * Your list of interference graph nodes,
+     * Your binding of variables to nodes in the interference graph.
+     */
+    List<Variable> variables;
+    List<CFNode> cfnodes;
+    List<TempNode> tempnodes;
+    List<InfoNode> infonodes;
+    Graph interference, colorGraph;
+    Deque<TempNode> stack;
+    int numOfSpills = 0;
+
+    private RegisterAllocator() {
+        variables = new ArrayList<Variable>();
+        cfnodes = new ArrayList<CFNode>();
+        infonodes = new ArrayList<InfoNode>();
+        tempnodes = new ArrayList<TempNode>();
+        stack = new ArrayDeque<TempNode>();
+        interference = new Graph();
+        colorGraph = new Graph();
+        numOfSpills = 0;
+    }
+
+    // perform all register allocations for this program
+    public static void alloc(SSAProgram prog, int freeRegisters) {
+        // first main
+        SSAMethod main = prog.getMain();
+        main.setBody(alloc(main.getBody(), freeRegisters));
+
+        // then each class
+        for (SSAClass cl : prog.getClassesOrdered())
+            alloc(cl, freeRegisters);
+    }
+
+    // perform all register allocations for this class
+    public static void alloc(SSAClass cl, int freeRegisters) {
+        for (SSAMethod m : cl.getMethodsOrdered())
+            alloc(m, freeRegisters);
+    }
+
+    // perform register allocation for this method
+    public static void alloc(SSAMethod m, int freeRegisters) {
+        m.setBody(alloc(m.getBody(), freeRegisters));
+    }
+
+    // the register allocator itself
+    public static List<SSAStatement> alloc(List<SSAStatement> block, int freeRegisters) {
+        Set<TempNode> actualSpills;
+
+        RegisterAllocator ra = new RegisterAllocator();
+        ra.block = block;
+
+        while (true) {
+            /* FILLIN: This body may work fine, in which case you will have to
+             * write the relevant functions, or you may prefer to implement it
+             * differently */
+
+            // prefill the variables with single statements
+            ra.initVariables();
+
+            // unify
+            ra.unifyVariables();
+
+            // now build the CF nodes
+            ra.initCFNodes();
+
+            // build the use[n] relationship from them
+            ra.addUses();
+            
+            // build their successor/predecessor relationships
+            ra.cfPredSucc();
+
+            // liveness analysis
+            ra.liveness();
+            
+            // build the temporaries
+            ra.initTempNodes();
+            
+            // and figure out their interference
+            ra.buildInterference();
+            
+            ra.simplify(freeRegisters);
+            
+            // do we need to spill?
+            actualSpills = ra.select(freeRegisters);
+            if (actualSpills.size() == 0) break;
+
+            // OK, rewrite to perform the spills
+            ra.performSpills(actualSpills); 
+        }
+
+        // FILLIN: now, using the information from the interference graph, assign the register for each SSA statement
+
+        int i = 0;
+        for(SSAStatement s: block) {
+            s.setRegister(i%freeRegisters);
+            i++;
+        }
+
+        return ra.block;
+    }
+
+    /******************************** find functions *******************************/
+    public void findUnify(SSAStatement stat, List<Variable> toRemove) {
+
+        SSAStatement left = stat.getLeft();
+        SSAStatement right = stat.getRight();
+
+        if(left.getOp() == Op.Unify)
+            findUnify(left, toRemove);
+
+        if(right.getOp() == Op.Unify)
+            findUnify(right, toRemove);
+        
+        Variable main = findVariable(stat);
+        
+        if(main == null) throw new Error("Couldn't find variable");
+
+        Variable l = findVariable(left);
+        Variable r = findVariable(right);
+
+        for(SSAStatement s : l.v){
+            main.v.add(s);
+        }
+
+        for(SSAStatement s : r.v){
+            main.v.add(s);
+        }
+
+        toRemove.add(l);
+        toRemove.add(r);
+
+    }
+
+    public Variable findVariable(SSAStatement stat) {
+        for(Variable var : variables) {
+            for(SSAStatement s : var.v) {
+                if(s.getIndex() == stat.getIndex()) {
+                    return var;
+                }
+            }
+        }
+        return null;
+    }
+
+    public InfoNode findSSAVar(int index) {
+        for(InfoNode info : infonodes) {
+            if(info.getSSA().getIndex() == index) {
+                return info;
+            }
+        }
+        return null;
+    }
+
+    public void findLabelSucc(String label, HashSet<InfoNode> set) {
+        Op oper;
+        for(InfoNode info : infonodes){
+            for(SSAStatement s : info.getVariable().v) {
+                oper = s.getOp();
+                if((oper == Op.NBranch) || (oper == Op.Branch) || (oper == Op.Goto)) {
+                    String jumpsTo = (String)s.getSpecial();
+                    if(jumpsTo.equals(label))
+                        set.add(info);
+                }
+            }
+        }
+    }
+
+    public void findLabel(String label, HashSet<InfoNode> set) {
+        Op oper;
+        for(InfoNode info : infonodes){
+            for(SSAStatement s : info.getVariable().v) {
+                oper = s.getOp();
+                if(oper == Op.Label) {
+                    String jumpsTo = (String)s.getSpecial();
+                    if(jumpsTo.equals(label))
+                        set.add(info);
+                }
+            }
+        }
+    }
+
+/*
+    public InfoNode findInfoNode(SSAStatement ssa) {
+        for(InfoNode info : infonodes) {
+            if(info.getSSA().getIndex() == ssa.getIndex()) {
+                return info;
+            }
+        }
+        return null;
+    }
+
+    // return the main Info node with the unify
+    public InfoNode findInfoNode(Variable var) {
+        for(SSAStatement ssa : var.v) {
+            for(InfoNode info : infonodes) {
+                if(info.isUnified) continue;
+                if(ssa.getIndex() == info.getSSA().getIndex()) {
+                    return info;
+                }
+            }
+        }
+        return null;
+    } */
+/*
+    public TempNode findTempNode(Variable var) {
+        Variable var2;
+        for(TempNode temp : tempnodes) {
+            var2 = temp.getInfoNode().getVariable();
+            if(var2.master.getIndex() == var.master.getIndex())
+                return temp;
+        }
+        return null;
+    }
+
+    public TempNode findTempNode(int index) {
+        Variable var2;
+        for(TempNode temp : tempnodes) {
+            var2 = temp.getInfoNode().getVariable();
+            if(var2.master.getIndex() == index)
+                return temp;
+        }
+        return null;
+    }
+*/
+    /******************************** end find functions *******************************/
+
+
+    public boolean isGotoPred(InfoNode pred, int index) {
+        for(SSAStatement s : pred.getVariable().v) {
+            if(s.getIndex() == index && s.getOp() == Op.Goto)
+                return true; 
+        }
+        return false;
+    }
+
+    public int getSSAListIndex(SSAStatement ssa) {
+        return block.indexOf(ssa);
+    }
+
+    /*public SSAStatement getSSA(TempNode temp) {
+           
+        InfoNode info = temp.getInfoNode();
+        Variable var = info.getVariable();
+        for(SSAStatement s : var.v) {
+            if(s.getIndex)
+                return s;
+        }
+        return null;
+    }*/
+
+
+    /******************************** fill functions ********************************/
+    public void fillPredSucc(CFNode node) {
+        HashSet<InfoNode> set;
+        int prevSSA, nextSSA;
+        InfoNode info;
+
+        for(SSAStatement s : node.master.v) {
+
+            prevSSA = s.getIndex() - 1;
+            nextSSA = prevSSA + 2;
+            
+            info = findSSAVar(prevSSA);
+            if( info != null) {
+                set = node.preds.get(s.getIndex());
+                addPred(s, set, info, prevSSA);
+            }
+
+            info = findSSAVar(nextSSA);
+            if(info != null) {
+                set = node.succs.get(s.getIndex());
+                addSucc(s, set, info); 
+            }
+        }
+    }
+
+    public void addPred(SSAStatement ssa, HashSet<InfoNode> set, InfoNode pred, int prevIndex) {
+
+        Op oper = ssa.getOp();
+        if(oper == Op.Label) {
+            // find Branchs and Gotos that refer to this label.
+            String label = (String)ssa.getSpecial();
+            findLabelSucc(label, set);
+        }
+
+        if(!isGotoPred(pred, prevIndex))
+            set.add(pred);
+        
+        return;
+    }
+
+    public void addSucc(SSAStatement ssa, HashSet<InfoNode> set, InfoNode succ) {
+
+        SSAStatement left;
+        Op oper = ssa.getOp();
+
+
+        if((oper == Op.NBranch) || (oper == Op.Branch) || (oper == Op.Goto)) {
+            // find labels that these jump to.
+            String label = (String)ssa.getSpecial();
+            findLabel(label, set);
+        }
+        
+        // Gotos don't have a successor at goto's index + 1;
+        if(oper != Op.Goto)
+            set.add(succ);
+        
+        return;
+    }
+
+    public void addUse(SSAStatement ssa, HashSet<Variable> set) {
+
+        SSAStatement left, right;
+        left = null;
+        right = null;
+        Op oper = ssa.getOp();
+
+        switch(oper) {
+            case MemberAssg:
+            case Index:
+            case Unify:
+            case Eq:             
+            case Ne:
+            case Lt:
+            case Le:         
+            case Gt:
+            case Ge:
+            case And:
+            case Or:
+            case Plus:           
+            case Minus:          
+            case Mul:            
+            case Div:            
+            case Mod:
+            left = ssa.getLeft();
+            right = ssa.getRight();
+            break;
+            case IndexAssg:
+            left = ssa.getLeft();
+            right = ssa.getRight();
+            set.add(findVariable((SSAStatement)ssa.getSpecial()));
+            break;
+            case Call:
+
+            left = ssa.getLeft();
+            SSACall call = (SSACall)ssa.getSpecial();
+            for(SSAStatement s: call.getArgs()) {
+                set.add(findVariable(s));
+            }
+            break;
+            case Member:
+            case Not:
+            case Arg:
+            case NewIntArray:
+            case Return:
+            case Alias:
+            case Store:
+            case VarAssg:         
+            case Print:
+            case Branch:
+            case NBranch:
+            left = ssa.getLeft();              
+            break;
+            default:
+            break;
+
+        }
+
+        if(left != null) 
+            set.add(findVariable(left));
+        if(right != null)
+            set.add(findVariable(right));
+    }
+
+    public void fillUses(CFNode node) {
+        HashSet<Variable> set;
+        for(SSAStatement s : node.master.v) {
+            set = node.uses.get(s.getIndex());
+            addUse(s, set);
+            // define set
+            set = node.defs.get(s.getIndex());
+            // it defines itself
+            set.add(findVariable(s)); 
+        } 
+    }
+    /******************************** end fill functions ********************************/
+
+    // FILLIN: Implement the methods used by alloc() above
+    public void initVariables() {
+        Variable var;
+        for(SSAStatement s : block) {
+            var = new Variable(s);
+            variables.add(var);
+        }
+    }
+
+
+    public void unifyVariables() {
+        List<Variable> toRemove = new ArrayList<Variable>();
+
+        for(Variable var : variables) {
+            Op op = var.master.getOp();
+            if(op == Op.Unify && !toRemove.contains(var)) {
+                findUnify(var.master, toRemove);
+            }
+        } 
+
+        // delete unified variables individual objects
+        for(Variable var : toRemove) {
+            // find ssa statements unifed variable
+            SSAStatement ssa = var.master;
+            InfoNode node = findInfoNode(ssa);
+            // remove the variable from the list and find new var for the info node
+            variables.remove(var);
+            Variable v = findVariable(var.master);
+            node.setVariable(v);
+            node.setUnified(true);
+        }
+    }
+
+    public void initCFNodes() {
+        CFNode newNode;
+        for(Variable var : variables) {
+            newNode = new CFNode(var);
+            cfnodes.add(newNode);
+
+            // find infonodes and add cfg
+            for(SSAStatement s : var.v){
+                node = findInfoNode(s);
+                node.setCFNode(newNode);
+            }
+            
+        }
+    }
+
+    public void addUses() {
+        for(CFNode node : cfnodes) {
+            fillUses(node);
+               /* System.out.println(node.master.master);
+                for(SSAStatement s: node.master.v) { 
+                    System.out.println("Statment " + s.getIndex() + " uses ");
+                    for(Variable v : node.uses.get(s.getIndex()))
+                        System.out.println(v.master);
+                    System.out.println("end");
+                }*/
+            }
+        }
+
+        public void cfPredSucc() {
+            for(CFNode node : cfnodes) {
+                fillPredSucc(node);
+          /*   for(SSAStatement s: node.master.v) { 
+                System.out.println("Statment " + s + " succs ");
+                for(InfoNode info : node.succs.get(s.getIndex()))
+                    System.out.println(info.getSSA());
+                System.out.println("preds ");
+                for(InfoNode info : node.preds.get(s.getIndex()))
+                    System.out.println(info.getSSA());
+                System.out.println("end");
+            } */
+        }
+    }
+
+    public void liveness() {
+        CFNode node;
+        InfoNode info;
+        HashSet<Variable> out, in, def, use, succIn;
+        HashSet<InfoNode> succ;
+        int size = block.size();
+        int index;
+        Variable var;
+        SSAStatement ssa;
+        HashSet<Integer> done = new HashSet<Integer>();
+        HashMap<Integer, HashSet<Integer>> todo = new HashMap<Integer, HashSet<Integer>>();
+        for(int i =  size - 1; i > -1; i--) {
+            // For each ssastatement find it's cfnode, then get it's out and int 
+
+            ssa = block.get(i);
+            info = findInfoNode(ssa);
+            node = info.getCFNode();
+            index = ssa.getIndex();
+            out = node.outs.get(index);
+            def = node.defs.get(index);
+            use = node.uses.get(index);
+            in = node.ins.get(index);
+            succ = node.succs.get(index);
+
+            System.out.println("Statement " + ssa.getIndex() + " analysis: " + ssa);
+
+            for(Variable v : def)
+                out.add(v);
+            
+            // if it's not the first node being analyzed
+            if(succ != null) { 
+                for(InfoNode ifo : succ) {
+                    int succSSA = ifo.getSSA().getIndex();
+                    // if the successor isn't done yet, put it in the todo
+                    if(!done.contains(succSSA)) {
+                        HashSet<Integer> todoSet;
+                        if(!todo.containsKey(succSSA)) {
+                            todoSet = new HashSet<Integer>();
+                            todoSet.add(i);
+
+                        } else {
+                            todoSet = todo.get(succSSA);
+                            todoSet.add(i);
+                        }
+                      //  System.out.println("Added " + i + " waiting for " + succSSA);
+                        todo.put(succSSA, todoSet);
+                        continue;
+                    }
+                    succIn = ifo.getCFNode().ins.get(succSSA);
+                    for(Variable v : succIn) {
+                        out.add(v);
+                    }
+                }
+            }
+            
+            for(Variable v : out) {
+                if(!def.contains(v)) 
+                    in.add(v);
+            }
+
+            for(Variable v : use) {
+                in.add(v);
+            }
+
+            done.add(index);
+
+            if(todo.containsKey(index)) {
+             //   System.out.println("Finally Finished " + index);
+                int max = i;
+                for(Integer predInt : todo.get(index)) { 
+                //System.out.println("Pred Int is " + predInt);   
+                    if(predInt > max) 
+                        max = predInt;
+                }
+                todo.remove(index);
+                // max + 1 because the loop will do a i--
+                i = max + 1;
+                //System.out.println("Going back to " + i);
+            }
+            
+            System.out.println("Out");
+            for(Variable v : out) {
+                System.out.println("    "+v.master);
+            }
+            System.out.println("In");
+            for(Variable v : in) {
+                System.out.println("    "+v.master);
+            }
+           
+            System.out.println("end"); 
+            System.out.println(""); 
+
+        }
+    }
+    public void initTempNodes() {
+      /*  for(Variable var : variables) {
+            InfoNode info = findInfoNode(var);
+            TempNode node = new TempNode(info);
+            tempnodes.add(node);
+        }*/
+    }
+
+    public void buildInterference() {
+       /* for(TempNode temp : tempnodes) {
+            interference.addVertex(temp.clone()); 
+            System.out.println("Degree is "+ interference.getDegree(temp.clone()));   
+        }*/
+    }
+
+    public void simplify(int freeRegisters) {
+        /*  while graph is not empty find the min degree */
+        /*int degree;
+        while(!interference.isEmpty()) {
+            TempNode min = interference.findDegreeLessNode(freeRegisters);
+            degree = interference.getDegree(min);
+           
+            if(degree >= freeRegisters) {
+
+                min = interference.leastUsedNode();
+                stack.addLast(min);
+            } else {
+                stack.push(min);
+            }
+
+            interference.remove(min);
+        } */
+    }
+
+    public Set<TempNode> select(int freeRegisters){
+        Set<TempNode> spills = new HashSet<TempNode>();
+        
+        /*Create new graph While stack has nodes, color 
+           if color is invalid, spill */
+
+        /*Graph toColor = new Graph();  
+       
+        TempNode node;
+        int color;
+        while(!stack.isEmpty()) {
+            node = stack.pop();
+            color = findColor(node);
+            if(color == -1) {
+                spills.add(temp);
+                break;
+            }
+            node.setColor(color);
+            toColor.addVertex(node);
+       }
+
+       while(!stack.isEmpty()) {
+            spills.add(stack.pop());
+       }
+       colorGraph = toColor;
+        */
+       return spills;
+    }
+
+    
+
+    public void performSpills(Set<TempNode> actualSpills) {
+        // find ssastatement to write after
+        // check use set
+        /*TempNode spill = leastUsedNode(actualSpills);
+        SSAStatement left = getSSA(spill);
+        // check arrayList
+        int index = getSSAListIndex(left) + 1;
+        SSAStatement store = new SSAStatement(null, Op.Store, left, null, numOfSpills);
+        block.add(index, store);
+        // find ssastatement to load before
+        // check use set
+        index = findNextUseIndex(left) - 1;
+        SSAStatement load = new SSAStatement(null, Op.Load, numOfSpills);
+        block.add(index, load);
+        
+        numOfSpills++;
+        // clear everything
+        variables.clear();
+        cfnodes.clear();
+        tempnodes.clear();
+        infonodes.clear();
+        interference.clear();
+        while(!stack.isEmpty()) stack.pop();*/
+    }
+
+
+}
