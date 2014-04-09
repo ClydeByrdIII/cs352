@@ -52,7 +52,7 @@ public class RegisterAllocator {
         }
 
         public String toString() {
-            StringBuilder string = new StringBuilder("Master:" + master);
+            StringBuilder string = new StringBuilder("Variable Master SSA:" + master);
             string.append('\n');
             for(SSAStatement s: v){
                 if(s == master) continue;
@@ -72,11 +72,132 @@ public class RegisterAllocator {
     class CFNode {
         // FILLIN...
         // will need at least pred, succ, def[n], use[n], in[n] and out[n]
+        HashSet<Variable> def, in, out, use;
+        HashSet<CFNode> pred, succ;
+        Variable master;
+        SSAStatement ssa;
+
+        public CFNode(SSAStatement ssa) {
+            this.ssa = ssa;
+            master = findVariable(ssa);
+            pred = new HashSet<CFNode>();
+            succ = new HashSet<CFNode>();
+            def = new HashSet<Variable>();
+            use = new HashSet<Variable>();
+            in = new HashSet<Variable>();
+            out = new HashSet<Variable>();
+        }
+
+        public SSAStatement getSSA() {
+            return ssa;
+        }
+
+        public Variable getVariable() {
+            return master;
+        }
+
+        public Set<Variable> getSet(String set) {
+            if(set.equals("use")) {
+                return use;
+            } else if(set.equals("def")) {
+                return def;
+            } else if(set.equals("in")) {
+                return in;    
+            } else if(set.equals("out")) {
+                return out;
+            } 
+            
+            return null;
+        }
+
+        public Set<CFNode> getPredSucc(String set) {
+            if(set.equals("pred")) {
+                return pred; 
+            } else if(set.equals("succ")) {
+                return succ; 
+            }
+            return null;
+        }
+
+        public boolean contains(SSAStatement ssa) {
+            return contains(ssa.getIndex());
+        }
+
+        public boolean contains(int index){
+            return (ssa.getIndex() == index);
+        }
+
+        public String toString() {
+            StringBuilder string = new StringBuilder("CFNode Master SSA:" + ssa);
+            string.append('\n');
+            string.append("CFNode Variable:" + master);
+            string.append('\n');
+
+            string.append("Pred:");
+            string.append('\n');
+            for(CFNode node: pred){
+                string.append(node.getSSA());
+                string.append('\n');
+            }
+            string.append("Succ:");
+            string.append('\n');
+            for(CFNode node: succ){
+                string.append(node.getSSA());
+                string.append('\n');
+            } 
+
+            string.append("Use:");
+            string.append('\n');
+            for(Variable var: use){
+                if(var == master) continue;
+                string.append(var.getSSA());
+                string.append('\n');
+            }
+            string.append("Def:");
+            string.append('\n');
+            for(Variable var: def){
+                string.append(var.getSSA());
+                string.append('\n');
+            }
+
+            string.append("Out:");
+            string.append('\n');
+            for(Variable var: out){
+                string.append(var.getSSA());
+                string.append('\n');
+            }
+
+            string.append("In:");
+            string.append('\n');
+            for(Variable var: in){
+                string.append(var.getSSA());
+                string.append('\n');
+            }
+            
+            return string.toString();
+        }
+
     }
 
     // a node in the interference graph (a temporary)
     class TempNode {
         // FILLIN...
+        Set<Variable> live;
+        Variable master;
+
+        public TempNode(Variable var) {
+            master = var;
+            for(SSAStatement ssa : var.getUnifedSSA()){
+                CFNode node = findCFNode(ssa);
+                addSetToLive(node.getSet("in"));
+            }
+        }
+
+        public void addSetToLive(Set<Variable> set) {
+            for(Variable var : set) {
+                live.add(var);
+            }
+        }
     }
 
     // the block we're performing allocation over
@@ -150,11 +271,10 @@ public class RegisterAllocator {
 
             // unify
             ra.unifyVariables();
-            break;
-/*
+           
             // now build the CF nodes
             ra.initCFNodes();
-
+ 
             // build the use[n] relationship from them
             ra.addUses();
 
@@ -162,8 +282,10 @@ public class RegisterAllocator {
             ra.cfPredSucc();
 
             // liveness analysis
-            ra.liveness();
+            ra.liveness(); 
 
+break;
+/*
             // build the temporaries
             ra.initTempNodes();
 
@@ -216,7 +338,137 @@ public class RegisterAllocator {
         } */
     }
 
+    public void initCFNodes() {
+        for(SSAStatement s : block) {
+            CFNode newNode = new CFNode(s);
+            cfnodes.add(newNode);
+            //System.out.println(newNode);
+        }
+    }
+
+     public void addUses() {
+        for(CFNode node : cfnodes) {
+            fillUses(node);
+            //System.out.println(node);
+        }
+    }
+
+     public void cfPredSucc() {
+        for(CFNode node : cfnodes) {
+            fillPredSucc(node);
+            //System.out.println(node);
+            //System.out.println("end");
+        }
+    }
+    public void liveness() {
+        CFNode node;
+        Set<Variable> out, in, def, use, succIn;
+        Set<CFNode> succ;
+        int size, index;
+        Variable var;
+        SSAStatement ssa;
+        Set<Integer> done;
+        HashMap<Integer, Set<Integer>> todo;
+
+        todo = new HashMap<Integer, Set<Integer>>();
+        done = new HashSet<Integer>();
+        size = block.size();
+
+        for(int i =  size - 1; i > -1; i--) {
+            // For each ssastatement find it's cfnode, then get it's out and int 
+
+            ssa = block.get(i);
+
+            node = findCFNode(ssa);
+            index = ssa.getIndex();
+            out = node.getSet("out");
+            in = node.getSet("in");
+            def = node.getSet("def");
+            use = node.getSet("use");
+            succ = node.getPredSucc("succ");
+
+            System.out.println("Statement " + ssa.getIndex() + " analysis: " + ssa);
+
+            for(Variable v : def)
+                out.add(v);
+            
+            
+            // if it's not the first node being analyzed
+            if(succ != null) { 
+                for(CFNode n : succ) {
+                    int succSSA = n.getSSA().getIndex();
+                    // if the successor isn't done yet, put it in the todo
+                    if(!done.contains(succSSA)) {
+                        Set<Integer> todoSet;
+                        if(!todo.containsKey(succSSA)) {
+                            todoSet = new HashSet<Integer>();
+                            todoSet.add(i);
+
+                        } else {
+                            todoSet = todo.get(succSSA);
+                            todoSet.add(i);
+                        }
+                      //  System.out.println("Added " + i + " waiting for " + succSSA);
+                        todo.put(succSSA, todoSet);
+                        continue;
+                    }
+               
+                    //System.out.println("Succ:" + succSSA);
+                    //System.out.println(findCFNode(succSSA));
+                
+                    succIn = findCFNode(succSSA).getSet("in");
+                    for(Variable v : succIn) {
+                        out.add(v);
+                    }
+                }
+            }
+            
+            for(Variable v : out) {
+                if(!def.contains(v)) 
+                    in.add(v);
+            }
+
+            for(Variable v : use) {
+                in.add(v);
+            }
+
+            done.add(index);
+
+            if(todo.containsKey(index)) {
+             //   System.out.println("Finally Finished " + index);
+                int max = i;
+                for(Integer predInt : todo.get(index)) { 
+                //System.out.println("Pred Int is " + predInt);   
+                    if(predInt > max) 
+                        max = predInt;
+                }
+                todo.remove(index);
+                // max + 1 because the loop will do a i--
+                i = max + 1;
+                //System.out.println("Going back to " + i);
+            }
+
+             
+          /*  System.out.println("Out");
+            for(Variable v : out) {
+                System.out.println("    "+v.master);
+            }
+            System.out.println("In");
+            for(Variable v : in) {
+                System.out.println("    "+v.master);
+            }
+           
+            System.out.println("end"); 
+            System.out.println("");  */
+            
+        }
+
+
+    }
+
     /**** Helper functions *****/
+
+    // Finders
         public void findUnify(SSAStatement stat, List<Variable> toRemove) {
 
         SSAStatement left = stat.getLeft();
@@ -254,4 +506,203 @@ public class RegisterAllocator {
         }
         return null;
     }
+
+    public Variable findVariable(int index) {
+        for(Variable var: variables) {
+            if(var.contains(index))
+                return var;
+        }
+        return null;
+    } 
+
+    public CFNode findCFNode(Variable var) {
+        return findCFNode(var.getSSA());
+    }
+
+    public CFNode findCFNode(SSAStatement ssa) {
+        return findCFNode(ssa.getIndex());
+    }
+
+    public CFNode findCFNode(int index) {
+        for(CFNode node : cfnodes){
+            if(node.contains(index)){
+                return node;
+            }
+        }
+        return null;
+    }
+
+    public void findLabelSucc(String label, Set<CFNode> set) {
+        Op oper;
+        for(CFNode node : cfnodes){
+            Variable var = node.getVariable();
+            for(SSAStatement s : var.getUnifedSSA()) {
+                oper = s.getOp();
+                if((oper == Op.NBranch) || (oper == Op.Branch) || (oper == Op.Goto)) {
+                    String jumpsTo = (String)s.getSpecial();
+                    if(jumpsTo.equals(label))
+                        set.add(node);
+                }
+            }
+        }
+    }
+
+    public void findLabel(String label, Set<CFNode> set) {
+        Op oper;
+        for(CFNode node : cfnodes){
+            Variable var = node.getVariable();
+            for(SSAStatement s : var.getUnifedSSA()) {
+                oper = s.getOp();
+                if(oper == Op.Label) {
+                    String jumpsTo = (String)s.getSpecial();
+                    if(jumpsTo.equals(label))
+                        set.add(node);
+                }
+            }
+        }
+    }
+
+
+    //Fillers
+    public void addUse(SSAStatement ssa, Set<Variable> set) {
+
+        SSAStatement left, right;
+        left = null;
+        right = null;
+        Op oper = ssa.getOp();
+
+        switch(oper) {
+            case MemberAssg:
+            case Index:
+            case Unify:
+            case Eq:             
+            case Ne:
+            case Lt:
+            case Le:         
+            case Gt:
+            case Ge:
+            case And:
+            case Or:
+            case Plus:           
+            case Minus:          
+            case Mul:            
+            case Div:            
+            case Mod:
+                left = ssa.getLeft();
+                right = ssa.getRight();
+                break;
+            case IndexAssg:
+                left = ssa.getLeft();
+                right = ssa.getRight();
+                set.add(findVariable((SSAStatement)ssa.getSpecial()));
+                break;
+            case Call:
+                left = ssa.getLeft();
+                SSACall call = (SSACall)ssa.getSpecial();
+                for(SSAStatement s: call.getArgs()) {
+                    set.add(findVariable(s));
+                }
+                break;
+            case Member:
+            case Not:
+            case Arg:
+            case NewIntArray:
+            case Return:
+            case Alias:
+            case Store:
+            case VarAssg:         
+            case Print:
+            case Branch:
+            case NBranch:
+                left = ssa.getLeft();              
+                break;
+            default:
+                break;
+
+        }
+
+        if(left != null) 
+            set.add(findVariable(left));
+        if(right != null)
+            set.add(findVariable(right));
+    }
+
+    public void fillUses(CFNode node) {
+        SSAStatement ssa = node.getSSA();
+        Set<Variable> useDef;
+
+        useDef = node.getSet("use");
+        addUse(ssa, useDef);
+        // define set
+        useDef = node.getSet("def");
+        // it defines itself
+        useDef.add(node.getVariable()); 
+    } 
+
+       public void fillPredSucc(CFNode node) {
+        Set<CFNode> set;
+        CFNode succPred;
+        SSAStatement ssa;
+        int prevSSA, nextSSA;
+
+        ssa = node.getSSA();
+
+        prevSSA = ssa.getIndex() - 1;
+        nextSSA = prevSSA + 2;
+        
+        succPred = findCFNode(prevSSA);
+        if( succPred != null) {
+            set = node.getPredSucc("pred");
+            addPred(ssa, set, succPred, prevSSA);
+        }
+
+        succPred = findCFNode(nextSSA);
+        if(succPred != null) {
+            set = node.getPredSucc("succ");
+            addSucc(ssa, set, succPred); 
+        }
+    }
+
+    public void addPred(SSAStatement ssa, Set<CFNode> set, CFNode pred, int prevIndex) {
+
+        Op oper = ssa.getOp();
+        if(oper == Op.Label) {
+            // find Branchs and Gotos that refer to this label.
+            String label = (String)ssa.getSpecial();
+            findLabelSucc(label, set);
+        }
+
+        if(!isGotoPred(pred, prevIndex))
+            set.add(pred);
+        
+        return;
+    }
+
+    public void addSucc(SSAStatement ssa, Set<CFNode> set, CFNode succ) {
+
+        SSAStatement left;
+        Op oper = ssa.getOp();
+
+        if((oper == Op.NBranch) || (oper == Op.Branch) || (oper == Op.Goto)) {
+            // find labels that these jump to.
+            String label = (String)ssa.getSpecial();
+            findLabel(label, set);
+        }
+        
+        // Gotos don't have a successor at goto's index + 1;
+        if(oper != Op.Goto)
+            set.add(succ);
+        
+        return;
+    }
+
+    // isX functions
+    public boolean isGotoPred(CFNode pred, int index) {
+        for(SSAStatement s : pred.getVariable().getUnifedSSA()) {
+            if(s.getIndex() == index && s.getOp() == Op.Goto)
+                return true; 
+        }
+        return false;
+    }
+
 }
