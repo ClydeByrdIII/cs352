@@ -211,9 +211,9 @@ public class RegisterAllocator {
             variables.remove(var);
         }
 
-        for(Variable var : variables) {
+       /* for(Variable var : variables) {
             System.out.println(var);
-        }
+        } */
     }
 
     /**** Helper functions *****/
@@ -235,11 +235,11 @@ public class RegisterAllocator {
         Variable l = findVariable(left);
         Variable r = findVariable(right);
 
-        for(SSAStatement s : l.v){
+        for(SSAStatement s : l.getUnifedSSA()){
             main.getUnifedSSA().add(s);
         }
 
-        for(SSAStatement s : r.v){
+        for(SSAStatement s : r.getUnifedSSA()){
             main.getUnifedSSA().add(s);
         }
 
