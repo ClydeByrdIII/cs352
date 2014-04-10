@@ -16,7 +16,7 @@ public class RegisterAllocator {
         public final Set<SSAStatement> v;
         public Variable(SSAStatement s) {
             master = s;
-            v = new HashSet<SSAStatement>();
+            v = new LinkedHashSet<SSAStatement>();
             v.add(s);
         }
         public SSAStatement getSSA() {
@@ -72,20 +72,20 @@ public class RegisterAllocator {
     class CFNode {
         // FILLIN...
         // will need at least pred, succ, def[n], use[n], in[n] and out[n]
-        HashSet<Variable> def, in, out, use;
-        HashSet<CFNode> pred, succ;
+        LinkedHashSet<Variable> def, in, out, use;
+        LinkedHashSet<CFNode> pred, succ;
         Variable master;
         SSAStatement ssa;
 
         public CFNode(SSAStatement ssa) {
             this.ssa = ssa;
             master = findVariable(ssa);
-            pred = new HashSet<CFNode>();
-            succ = new HashSet<CFNode>();
-            def = new HashSet<Variable>();
-            use = new HashSet<Variable>();
-            in = new HashSet<Variable>();
-            out = new HashSet<Variable>();
+            pred = new LinkedHashSet<CFNode>();
+            succ = new LinkedHashSet<CFNode>();
+            def = new LinkedHashSet<Variable>();
+            use = new LinkedHashSet<Variable>();
+            in = new LinkedHashSet<Variable>();
+            out = new LinkedHashSet<Variable>();
         }
 
         public SSAStatement getSSA() {
@@ -190,11 +190,12 @@ public class RegisterAllocator {
 
         public TempNode(Variable var) {
             master = var;
-            live = new HashSet<TempNode>();
+            live = new LinkedHashSet<TempNode>();
             for(SSAStatement s : var.getUnifedSSA()) {
                 if(s.registerPinned()){
                     pinned = true;
                     color = s.getRegister();
+                   // System.out.println("Pinned nigga "+ s.getRegister());
                     break;
                 }
             }
@@ -259,14 +260,14 @@ public class RegisterAllocator {
         Map<TempNode, Set<TempNode>> adj;
         int size;
         public Graph() {
-            adj = new HashMap<TempNode, Set<TempNode>>();
+            adj = new LinkedHashMap<TempNode, Set<TempNode>>();
             size = 0;
         }
 
         public void addVertex(TempNode temp) {
             Set<TempNode> set;
             if(!adj.containsKey(temp)) {
-                set = new HashSet<TempNode>();
+                set = new LinkedHashSet<TempNode>();
             } else {
                 set = adj.get(temp);
             }
@@ -274,16 +275,6 @@ public class RegisterAllocator {
             size++;
         }
         public Set<TempNode> getNeighbors(TempNode node) {
-            /*Set<TempNode> neighbors = new HashSet<TempNode>();
-            for(Set<TempNode> set : adj.values()) {
-                if(set.contains(node)){
-                    for(TempNode n : set) {
-                        if(n == node) continue;
-                        neighbors.add(n);
-                    }
-                }
-            } 
-            return neighbors; */
             return adj.get(node);
         }
 
@@ -302,7 +293,6 @@ public class RegisterAllocator {
         public void color() {
             for(TempNode i : adj.keySet()){
                 if(i.getColor() < 0) continue;
-
                 for(SSAStatement s : i.getVariable().getUnifedSSA()) {
                     s.setRegister(i.getColor());
                 }
@@ -310,7 +300,18 @@ public class RegisterAllocator {
         }
 
         public TempNode leastUsedNode() {
-            return null;
+            TempNode min = null;
+            int degree = 999999;
+            for(TempNode i : adj.keySet()){
+                if(i.isRemoved()) continue;
+
+                int lower = this.getDegree(i);
+                if(lower < degree) {
+                    min = i;
+                    degree = lower;
+                }
+            }
+            return min;
         }
 
         public int getDegree(TempNode temp) {
@@ -329,7 +330,8 @@ public class RegisterAllocator {
         public void remove(TempNode temp) {
             if(adj.containsKey(temp)) {
                 temp.setRemoved(true);
-                temp.setColor(-1);
+                if(!temp.isPinned())
+                    temp.setColor(-1);
                 size--;
             }
         }  
@@ -337,9 +339,17 @@ public class RegisterAllocator {
 
             Set<TempNode> set = this.getNeighbors(temp);
             List<Integer> colors = new ArrayList<Integer>();
+            List<Integer> pins = new ArrayList<Integer>();
+
+            for(TempNode t : tempnodes) {
+                if(t.isPinned()) {
+                    pins.add(t.getColor());
+                }
+            }
             //System.out.println("Computing color for: " + temp + " color is " + temp.getColor());
 
             for(TempNode node : set) {
+
                 //System.out.println("Neighbor:");
                 //System.out.println(node.getVariable().getSSA() + " color is " + node.getColor());
                 if(node.isRemoved()) continue;
@@ -353,8 +363,9 @@ public class RegisterAllocator {
              //   System.out.println(i);
            // }
             for(int i = 0; i < registers; i++) {
-                if(!colors.contains(i)){
-                    //System.out.println("Color is now " + i);
+
+                if(!colors.contains(i) && !pins.contains(i)){
+                   
                     return i;
                 }
             }
@@ -546,10 +557,10 @@ public class RegisterAllocator {
         Variable var;
         SSAStatement ssa;
         Set<Integer> done;
-        HashMap<Integer, Set<Integer>> todo;
+        LinkedHashMap<Integer, Set<Integer>> todo;
 
-        todo = new HashMap<Integer, Set<Integer>>();
-        done = new HashSet<Integer>();
+        todo = new LinkedHashMap<Integer, Set<Integer>>();
+        done = new LinkedHashSet<Integer>();
         size = block.size();
 
         for(int i =  size - 1; i > -1; i--) {
@@ -579,7 +590,7 @@ public class RegisterAllocator {
                     if(!done.contains(succSSA)) {
                         Set<Integer> todoSet;
                         if(!todo.containsKey(succSSA)) {
-                            todoSet = new HashSet<Integer>();
+                            todoSet = new LinkedHashSet<Integer>();
                             todoSet.add(i);
 
                         } else {
@@ -653,7 +664,7 @@ public class RegisterAllocator {
     }
 
     public void buildInterference() {
-        HashMap<Set<Variable>, Set<Variable>> allIns = new HashMap<Set<Variable>, Set<Variable>>();
+        LinkedHashMap<Set<Variable>, Set<Variable>> allIns = new LinkedHashMap<Set<Variable>, Set<Variable>>();
 
         for(CFNode cfnode :cfnodes ){
             for(TempNode temp : tempnodes) {
@@ -701,7 +712,7 @@ public class RegisterAllocator {
                 TempNode min = interference.findDegreeLessNode(freeRegisters);
                 degree = interference.getDegree(min);
 
-                if(degree >= freeRegisters) {
+                if(degree >= (freeRegisters)) {
 
                 //min = interference.leastUsedNode();
                 // fix this!!
@@ -719,7 +730,7 @@ public class RegisterAllocator {
         }
 
         public Set<TempNode> select(int freeRegisters){
-            Set<TempNode> spills = new HashSet<TempNode>();
+            Set<TempNode> spills = new LinkedHashSet<TempNode>();
 
         /*Create new graph While stack has nodes, color 
         if color is invalid, spill */
@@ -729,9 +740,9 @@ public class RegisterAllocator {
             node = stack.pop();
             node.setRemoved(false);
             interference.size++;
-         //   if(node.isPinned()) {
-       //        continue;
-         //   }
+            if(node.isPinned()) {
+               continue;
+            }
             color = interference.findColor(node, freeRegisters);
             if(color == -1) {
             //System.out.println("Fuck");
