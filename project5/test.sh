@@ -10,10 +10,11 @@ do
     echo "Processing $f file..."
     # take action on each file. $f store current file name
     
-    #$CANONICAL/bin/mjcompile-ssa $f > canonicalSSA.txt
-    bin/mjcompile-mips $f > mip.s
-    spim -file mip.s > out.txt
-    
+    $CANONICAL/bin/mjcompile-mips $f > his.s
+    spim -file his.s > can.txt
+    bin/mjcompile-mips $f > mips.s
+    spim -file mips.s > out.txt
+
     #$CANONICAL/bin/mjcompile-x8664 $f > canonicalx8664.txt
     #bin/mjcompile-x8664 $f > myX8664.txt
 
@@ -23,9 +24,9 @@ do
     #$CANONICAL/bin/mjinterp-ssa $f > canonicalInterp.txt
     #bin/mjinterp-ssa $f > myInterp.txt
 
-    diff out.txt $.output
+    diff out.txt can.txt
     if [ $? -ne 0 ]; then
-        echo -e "Failed matching mjcompile-ssa $f"
+        echo -e "Failed matching mjcompile-mips $f"
     fi
 
     #diff canonicalMIPS.txt myMIPS.txt
