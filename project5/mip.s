@@ -97,8 +97,7 @@ mj__m_BS_Start:
  add $sp, $sp, -4
  sw $ra, ($sp)
  # a0: 5(0): Parameter *0 :int
- # a1: 6(1): VarAssg 5 *sz :int
- move $a1, $a0
+ # a0: 6(0): VarAssg 5 *sz :int
  # a0: 7(0): Null *Type(int[]) :int[]
  move $a0, $zero
  # a0: 8(0): NewIntArray 6 :int[]
@@ -106,24 +105,24 @@ mj__m_BS_Start:
  sw $v1, -8($fp)
  sw $a1, -12($fp)
  sw $a2, -16($fp)
- move $a0, $a1
  jal minijavaNewArray
  move $a0, $v0
  lw $v0, -4($fp)
  lw $v1, -8($fp)
  lw $a1, -12($fp)
  lw $a2, -16($fp)
- # a2: 9(2): VarAssg 8 *aux01 :int[]
- move $a2, $a0
- # a1: 10(1): Int *0 :int
- li $a1, 0
- # a0: 11(0): Int *1 :int
- li $a0, 1
- # a0: 12(0): IndexAssg 9 11 *10(1): Int *0 :int :int
- mul $v1, $a1, 4
+ # a1: 9(1): VarAssg 8 *aux01 :int[]
+ move $a1, $a0
+ # a0: 10(0): Int *0 :int
+ li $a0, 0
+ # a2: 11(2): Int *1 :int
+ li $a2, 1
+ # a0: 12(0): IndexAssg 9 11 *10(0): Int *0 :int :int
+ mul $v1, $a0, 4
  add $v1, $v1, 4
- add $v1, $v1, $a2
- sw $a0, ($v1)
+ add $v1, $v1, $a1
+ sw $a2, ($v1)
+ move $a0, $a2
  # a0: 13(0): Int *999 :int
  li $a0, 999
  # a0: 14(0): Return 13 :void

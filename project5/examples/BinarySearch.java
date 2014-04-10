@@ -59,7 +59,7 @@ class BS{
 	while (var_cont){
 	    medium = left + right ;
 	    medium = this.Div(medium);
-	    aux01 = number[medium] ;
+	    aux01 = 1 ;
 	    if (num < aux01) right = medium - 1 ;
 	    else left = medium + 1 ;
 	    if (this.Compare(aux01,num)) var_cont = false ;

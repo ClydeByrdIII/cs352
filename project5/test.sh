@@ -1,6 +1,6 @@
 #!/bin/bash
 FILES=examples/*.java
-CANONICAL=../project4C
+CANONICAL=../project5C
 
 make clean; make;
 echo -e "\n"
@@ -11,7 +11,8 @@ do
     # take action on each file. $f store current file name
     
     #$CANONICAL/bin/mjcompile-ssa $f > canonicalSSA.txt
-    bin/mjcompile-ssa -r $f 
+    bin/mjcompile-mips $f > mip.s
+    spim -file mip.s > out.txt
     
     #$CANONICAL/bin/mjcompile-x8664 $f > canonicalx8664.txt
     #bin/mjcompile-x8664 $f > myX8664.txt
@@ -22,10 +23,10 @@ do
     #$CANONICAL/bin/mjinterp-ssa $f > canonicalInterp.txt
     #bin/mjinterp-ssa $f > myInterp.txt
 
-    #diff canonicalSSA.txt mySSA.txt
-    #if [ $? -ne 0 ]; then
-     #   echo -e "Failed matching mjcompile-ssa $f"
-    #fi
+    diff out.txt $.output
+    if [ $? -ne 0 ]; then
+        echo -e "Failed matching mjcompile-ssa $f"
+    fi
 
     #diff canonicalMIPS.txt myMIPS.txt
     #if [ $? -ne 0 ]; then

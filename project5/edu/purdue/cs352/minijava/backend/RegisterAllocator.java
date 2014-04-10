@@ -16,7 +16,7 @@ public class RegisterAllocator {
         public final Set<SSAStatement> v;
         public Variable(SSAStatement s) {
             master = s;
-            v = new LinkedHashSet<SSAStatement>();
+            v = new HashSet<SSAStatement>();
             v.add(s);
         }
         public SSAStatement getSSA() {
@@ -72,20 +72,20 @@ public class RegisterAllocator {
     class CFNode {
         // FILLIN...
         // will need at least pred, succ, def[n], use[n], in[n] and out[n]
-        LinkedHashSet<Variable> def, in, out, use;
-        LinkedHashSet<CFNode> pred, succ;
+        HashSet<Variable> def, in, out, use;
+        HashSet<CFNode> pred, succ;
         Variable master;
         SSAStatement ssa;
 
         public CFNode(SSAStatement ssa) {
             this.ssa = ssa;
             master = findVariable(ssa);
-            pred = new LinkedHashSet<CFNode>();
-            succ = new LinkedHashSet<CFNode>();
-            def = new LinkedHashSet<Variable>();
-            use = new LinkedHashSet<Variable>();
-            in = new LinkedHashSet<Variable>();
-            out = new LinkedHashSet<Variable>();
+            pred = new HashSet<CFNode>();
+            succ = new HashSet<CFNode>();
+            def = new HashSet<Variable>();
+            use = new HashSet<Variable>();
+            in = new HashSet<Variable>();
+            out = new HashSet<Variable>();
         }
 
         public SSAStatement getSSA() {
@@ -189,7 +189,7 @@ public class RegisterAllocator {
 
         public TempNode(Variable var) {
             master = var;
-            live = new LinkedHashSet<TempNode>();
+            live = new HashSet<TempNode>();
         }
 
         public void addSetToLive(TempNode temp) {
@@ -254,7 +254,7 @@ public class RegisterAllocator {
         public void addVertex(TempNode temp) {
             Set<TempNode> set;
             if(!adj.containsKey(temp)) {
-                set = new LinkedHashSet<TempNode>();
+                set = new HashSet<TempNode>();
             } else {
                 set = adj.get(temp);
             }
@@ -262,7 +262,7 @@ public class RegisterAllocator {
             size++;
         }
         public Set<TempNode> getNeighbors(TempNode node) {
-            Set<TempNode> neighbors = new LinkedHashSet<TempNode>();
+            Set<TempNode> neighbors = new HashSet<TempNode>();
             for(Set<TempNode> set : adj.values()) {
                 if(set.contains(node)){
                     for(TempNode n : set) {
@@ -531,7 +531,7 @@ break;
         HashMap<Integer, Set<Integer>> todo;
 
         todo = new HashMap<Integer, Set<Integer>>();
-        done = new LinkedHashSet<Integer>();
+        done = new HashSet<Integer>();
         size = block.size();
 
         for(int i =  size - 1; i > -1; i--) {
@@ -561,7 +561,7 @@ break;
                     if(!done.contains(succSSA)) {
                         Set<Integer> todoSet;
                         if(!todo.containsKey(succSSA)) {
-                            todoSet = new LinkedHashSet<Integer>();
+                            todoSet = new HashSet<Integer>();
                             todoSet.add(i);
 
                         } else {
@@ -674,7 +674,7 @@ break;
     }
 
     public Set<TempNode> select(int freeRegisters){
-        Set<TempNode> spills = new LinkedHashSet<TempNode>();
+        Set<TempNode> spills = new HashSet<TempNode>();
         
         /*Create new graph While stack has nodes, color 
            if color is invalid, spill */

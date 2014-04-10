@@ -14,7 +14,9 @@ class BS{
     // Invoke methods to initialize, print and search
     // for elements on the array
     public int Start(int sz){
-	int aux01 ;
+	int[] aux01 ;
+	aux01 = new int[sz] ;
+	aux01[0] =1;
 	//int aux02 ;
 	//aux01 = this.Init(sz);
 	//aux02 = this.Print();
