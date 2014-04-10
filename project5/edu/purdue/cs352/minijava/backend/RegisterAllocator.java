@@ -662,7 +662,6 @@ public class RegisterAllocator {
     }
 
     public void buildInterference() {
-        HashMap<Set<Variable>, Set<Variable>> allIns = new HashMap<Set<Variable>, Set<Variable>>();
 
         for(CFNode cfnode :cfnodes ){
             for(TempNode temp : tempnodes) {
@@ -682,33 +681,44 @@ public class RegisterAllocator {
                     if(set.contains(var)) {
                         for(Variable v : set) {
                             if(v != var){
-                             TempNode temp2 = findTempNode(v);
-                             temp.addSetToLive(temp2);
-                             temp2.addSetToLive(temp);
-                         }
-                     }
-                 } 
-             }  
-         }
-     }
-
-            for(TempNode temp : tempnodes) {
-               // System.out.println(temp);
-                if(!temp.isPinned()) {
-                    interference.addVertex(temp);
-                }
+                                TempNode temp2 = findTempNode(v);
+                                temp.addSetToLive(temp2);
+                                temp2.addSetToLive(temp);
+                            }
+                        }
+                    } 
+                }  
             }
+        }
+
+        for(TempNode temp : tempnodes) {
+           // System.out.println(temp);
+                interference.addVertex(temp);
+        }
 
            // System.out.println("Degree of " + temp);
            // System.out.println(interference.getDegree(temp));
 
         //System.out.println("Size of Graph is " + interference.size() + " Number of Variables " + variables.size() + " Number of temps: " + tempnodes.size());
 
-        }
+    }
 
         public void simplify(int freeRegisters) {
             /*  while graph is not empty find the min degree */
             int degree;
+            List<TempNode> toRemove = new ArrayList<TempNode>();
+            /*for(Set<TempNode> set : interference.adj.values()){
+                for(TempNode i : set) {
+                    if(i.isPinned()) {
+                        toRemove.add(i);
+                    }
+                }
+                for(TempNode i : toRemove) {
+                    if(set.contains(i))
+                        set.remove(i);
+                }
+                toRemove.clear();
+            } */
 
             while(!interference.isEmpty()) {
                 TempNode min = interference.findDegreeLessNode(freeRegisters);
@@ -716,7 +726,6 @@ public class RegisterAllocator {
 
                 if(degree >= (freeRegisters)) {
                     min = interference.leastUsedNode();
-                // fix this!!
                     stack.addLast(min);
                 } else {
                     stack.push(min);
