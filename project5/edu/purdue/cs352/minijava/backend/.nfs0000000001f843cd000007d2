@@ -416,7 +416,7 @@ public class RegisterAllocator {
     // the register allocator itself
     public static List<SSAStatement> alloc(List<SSAStatement> block, int freeRegisters) {
         Set<TempNode> actualSpills;
-        //System.out.println("New Method");
+        System.out.println("New Method");
         RegisterAllocator ra = new RegisterAllocator();
         ra.block = block;
 

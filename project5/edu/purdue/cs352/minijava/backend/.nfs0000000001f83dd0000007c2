@@ -262,16 +262,9 @@ public class RegisterAllocator {
             size++;
         }
         public Set<TempNode> getNeighbors(TempNode node) {
-            Set<TempNode> neighbors = new LinkedHashSet<TempNode>();
-            for(Set<TempNode> set : adj.values()) {
-                if(set.contains(node)){
-                    for(TempNode n : set) {
-                        if(n == node) continue;
-                        neighbors.add(n);
-                    }
-                }
-            }
-            return neighbors;
+            if(adj.containsKey(node))
+                return adj.get(node);
+            return null;
         }
 
         public TempNode findDegreeLessNode(int k) {
@@ -321,10 +314,9 @@ public class RegisterAllocator {
         public int findColor(TempNode temp , int registers) {
             Set<TempNode> set = this.getNeighbors(temp);
             List<Integer> colors = new ArrayList<Integer>();
-            //System.out.println("Computing color for: " + temp + " color is " + temp.getColor());
+            System.out.println("Computing color for: " + temp + " color is " + temp.getColor());
             for(TempNode node : set) {
-                //System.out.println("Neighbor:");
-                //System.out.println(node.getVariable().getSSA() + " color is " + node.getColor());
+                System.out.println(node + " color is " + node.getColor());
                 if(node.isRemoved()) continue;
                 int neighborColor = node.getColor();
 
@@ -332,16 +324,15 @@ public class RegisterAllocator {
             }
 
             
-           // for(Integer i : colors) {
+            for(Integer i : colors) {
              //   System.out.println(i);
-           // }
-            for(int i = 0; i < registers; i++) {
-                if(!colors.contains(i)){
-                    //System.out.println("Color is now " + i);
-                    return i;
-                }
             }
-            //System.out.println("Bad Color is now " + -1);
+            for(int i = 0; i < registers; i++) {
+                if(!colors.contains(i))
+                    System.out.println("Color is" + i);
+                    return i;
+            }
+
             return -1;
         }
 
@@ -416,7 +407,7 @@ public class RegisterAllocator {
     // the register allocator itself
     public static List<SSAStatement> alloc(List<SSAStatement> block, int freeRegisters) {
         Set<TempNode> actualSpills;
-        //System.out.println("New Method");
+
         RegisterAllocator ra = new RegisterAllocator();
         ra.block = block;
 
@@ -863,7 +854,6 @@ break;
             case Return:
             case Alias:
             case Store:
-            case Load:
             case VarAssg:         
             case Print:
             case Branch:
