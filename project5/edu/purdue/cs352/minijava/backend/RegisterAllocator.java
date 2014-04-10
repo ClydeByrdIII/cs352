@@ -186,14 +186,22 @@ public class RegisterAllocator {
         Variable master;
         int color;
         boolean removed;
+        boolean pinned;
 
         public TempNode(Variable var) {
             master = var;
             live = new HashSet<TempNode>();
+            for(SSAStatement s : var.getUnifedSSA()) {
+                if(s.registerPinned()){
+                    pinned = true;
+                    color = s.getRegister();
+                    break;
+                }
+            }
         }
 
         public void addSetToLive(TempNode temp) {
-                live.add(temp);
+            live.add(temp);
         }
 
         public Set<TempNode> getAdjList() {
@@ -218,6 +226,10 @@ public class RegisterAllocator {
 
         public int getColor() {
             return color;
+        }
+
+        public boolean isPinned() {
+            return pinned;
         }
 
         public void setRemoved(boolean isRemoved) {
@@ -262,7 +274,7 @@ public class RegisterAllocator {
             size++;
         }
         public Set<TempNode> getNeighbors(TempNode node) {
-            Set<TempNode> neighbors = new HashSet<TempNode>();
+            /*Set<TempNode> neighbors = new HashSet<TempNode>();
             for(Set<TempNode> set : adj.values()) {
                 if(set.contains(node)){
                     for(TempNode n : set) {
@@ -270,8 +282,9 @@ public class RegisterAllocator {
                         neighbors.add(n);
                     }
                 }
-            }
-            return neighbors;
+            } 
+            return neighbors; */
+            return adj.get(node);
         }
 
         public TempNode findDegreeLessNode(int k) {
@@ -288,6 +301,8 @@ public class RegisterAllocator {
         }
         public void color() {
             for(TempNode i : adj.keySet()){
+                if(i.getColor() < 0) continue;
+
                 for(SSAStatement s : i.getVariable().getUnifedSSA()) {
                     s.setRegister(i.getColor());
                 }
@@ -319,9 +334,11 @@ public class RegisterAllocator {
             }
         }  
         public int findColor(TempNode temp , int registers) {
+
             Set<TempNode> set = this.getNeighbors(temp);
             List<Integer> colors = new ArrayList<Integer>();
             //System.out.println("Computing color for: " + temp + " color is " + temp.getColor());
+
             for(TempNode node : set) {
                 //System.out.println("Neighbor:");
                 //System.out.println(node.getVariable().getSSA() + " color is " + node.getColor());
@@ -430,10 +447,10 @@ public class RegisterAllocator {
 
             // unify
             ra.unifyVariables();
-           
+
             // now build the CF nodes
             ra.initCFNodes();
- 
+
             // build the use[n] relationship from them
             ra.addUses();
 
@@ -456,14 +473,15 @@ public class RegisterAllocator {
             actualSpills = ra.select(freeRegisters);
             if (actualSpills.size() == 0) break;
 
-break;
+            break;
 /*
             // OK, rewrite to perform the spills
             ra.performSpills(actualSpills);*/
         }
 
         // FILLIN: now, using the information from the interference graph, assign the register for each SSA statement
-            ra.color();
+        
+        ra.color();
         return ra.block;
     }
 
@@ -473,7 +491,7 @@ break;
         for(SSAStatement s : block) {
             Variable var = new Variable(s);
             variables.add(var);
-            //System.out.println(var);
+                //System.out.println(var);
         }
     }
 
@@ -487,15 +505,15 @@ break;
             }
         } 
 
-        // delete unified variables individual objects
+            // delete unified variables individual objects
         for(Variable var : toRemove) {
-            // remove the variable from the list
+                // remove the variable from the list
             variables.remove(var);
         }
 
-       /* for(Variable var : variables) {
-            System.out.println(var);
-        } */
+           /* for(Variable var : variables) {
+                System.out.println(var);
+            } */
     }
 
     public void initCFNodes() {
@@ -506,14 +524,14 @@ break;
         }
     }
 
-     public void addUses() {
+    public void addUses() {
         for(CFNode node : cfnodes) {
             fillUses(node);
             //System.out.println(node);
         }
     }
 
-     public void cfPredSucc() {
+    public void cfPredSucc() {
         for(CFNode node : cfnodes) {
             fillPredSucc(node);
             //System.out.println(node);
@@ -572,10 +590,10 @@ break;
                         todo.put(succSSA, todoSet);
                         continue;
                     }
-               
+
                     //System.out.println("Succ:" + succSSA);
                     //System.out.println(findCFNode(succSSA));
-                
+
                     succIn = findCFNode(succSSA).getSet("in");
                     for(Variable v : succIn) {
                         out.add(v);
@@ -608,7 +626,7 @@ break;
                 //System.out.println("Going back to " + i);
             }
 
-             
+
           /*  System.out.println("Out");
             for(Variable v : out) {
                 System.out.println("    "+v.master);
@@ -635,54 +653,85 @@ break;
     }
 
     public void buildInterference() {
-        for(TempNode temp : tempnodes) {
-            for(SSAStatement s : temp.getVariable().getUnifedSSA()) {
-                CFNode cfnode = findCFNode(s);
-                for(Variable var : cfnode.getSet("in")){
-                    temp.addSetToLive(findTempNode(var));
-                }
+        HashMap<Set<Variable>, Set<Variable>> allIns = new HashMap<Set<Variable>, Set<Variable>>();
+
+        for(CFNode cfnode :cfnodes ){
+            for(TempNode temp : tempnodes) {
+                Variable var = temp.getVariable();
+                Set<Variable> set = cfnode.getSet("in");
+                if(set.contains(var)) {
+                    for(Variable v : set) {
+                        if(v != var){
+                            TempNode temp2 = findTempNode(v);
+                            temp.addSetToLive(temp2);
+                            temp2.addSetToLive(temp);
+                        }
+                    }
+
+                    set = cfnode.getSet("out");
+                    if(set.contains(var)) {
+                        for(Variable v : set) {
+                            if(v != var){
+                             TempNode temp2 = findTempNode(v);
+                             temp.addSetToLive(temp2);
+                             temp2.addSetToLive(temp);
+                         }
+                     }
+                 } 
+             }  
+         }
+     }
+
+            for(TempNode temp : tempnodes) {
+               // System.out.println(temp);
+                interference.addVertex(temp);
             }
-            interference.addVertex(temp);
+
            // System.out.println("Degree of " + temp);
            // System.out.println(interference.getDegree(temp));
-        }
-        //System.out.println("Size of Graph is " + interference.size() + " Number of Variables " + variables.size() + " Number of temps: " + tempnodes.size());
-    }
 
-    public void simplify(int freeRegisters) {
-        /*  while graph is not empty find the min degree */
-        int degree;
-        while(!interference.isEmpty()) {
-            TempNode min = interference.findDegreeLessNode(freeRegisters);
-            degree = interference.getDegree(min);
-           
-            if(degree >= freeRegisters) {
+        //System.out.println("Size of Graph is " + interference.size() + " Number of Variables " + variables.size() + " Number of temps: " + tempnodes.size());
+
+        }
+
+        public void simplify(int freeRegisters) {
+            /*  while graph is not empty find the min degree */
+            int degree;
+            while(!interference.isEmpty()) {
+                TempNode min = interference.findDegreeLessNode(freeRegisters);
+                degree = interference.getDegree(min);
+
+                if(degree >= freeRegisters) {
 
                 //min = interference.leastUsedNode();
                 // fix this!!
-                stack.addLast(min);
-            } else {
-                stack.push(min);
-            }
+                    stack.addLast(min);
+                } else {
+                    stack.push(min);
+                }
 
-            interference.remove(min);
+                interference.remove(min);
            // System.out.println("Graph size is now :" + interference.size());
-        } 
+            } 
        // for(TempNode node : tempnodes)
         //    System.out.println(node.isRemoved());
 
-    }
+        }
 
-    public Set<TempNode> select(int freeRegisters){
-        Set<TempNode> spills = new HashSet<TempNode>();
-        
+        public Set<TempNode> select(int freeRegisters){
+            Set<TempNode> spills = new HashSet<TempNode>();
+
         /*Create new graph While stack has nodes, color 
-           if color is invalid, spill */
-        TempNode node;
+        if color is invalid, spill */
+            TempNode node;
         int color;
         while(!stack.isEmpty()) {
             node = stack.pop();
             node.setRemoved(false);
+            interference.size++;
+         //   if(node.isPinned()) {
+       //        continue;
+         //   }
             color = interference.findColor(node, freeRegisters);
             if(color == -1) {
             //System.out.println("Fuck");
@@ -695,9 +744,9 @@ break;
         while(!stack.isEmpty()) {
             spills.add(stack.pop());
         }
-   
-    
-       return spills;
+
+
+        return spills;
     }
 
     public void color() {
@@ -707,7 +756,7 @@ break;
     /**** Helper functions *****/
 
     // Finders
-        public void findUnify(SSAStatement stat, List<Variable> toRemove) {
+    public void findUnify(SSAStatement stat, List<Variable> toRemove) {
 
         SSAStatement left = stat.getLeft();
         SSAStatement right = stat.getRight();
@@ -841,21 +890,21 @@ break;
             case Mul:            
             case Div:            
             case Mod:
-                left = ssa.getLeft();
-                right = ssa.getRight();
-                break;
+            left = ssa.getLeft();
+            right = ssa.getRight();
+            break;
             case IndexAssg:
-                left = ssa.getLeft();
-                right = ssa.getRight();
-                set.add(findVariable((SSAStatement)ssa.getSpecial()));
-                break;
+            left = ssa.getLeft();
+            right = ssa.getRight();
+            set.add(findVariable((SSAStatement)ssa.getSpecial()));
+            break;
             case Call:
-                left = ssa.getLeft();
-                SSACall call = (SSACall)ssa.getSpecial();
-                for(SSAStatement s: call.getArgs()) {
-                    set.add(findVariable(s));
-                }
-                break;
+            left = ssa.getLeft();
+            SSACall call = (SSACall)ssa.getSpecial();
+            for(SSAStatement s: call.getArgs()) {
+                set.add(findVariable(s));
+            }
+            break;
             case Member:
             case Not:
             case Arg:
@@ -868,10 +917,10 @@ break;
             case Print:
             case Branch:
             case NBranch:
-                left = ssa.getLeft();              
-                break;
+            left = ssa.getLeft();              
+            break;
             default:
-                break;
+            break;
 
         }
 
@@ -893,7 +942,7 @@ break;
         useDef.add(node.getVariable()); 
     } 
 
-       public void fillPredSucc(CFNode node) {
+    public void fillPredSucc(CFNode node) {
         Set<CFNode> set;
         CFNode succPred;
         SSAStatement ssa;
