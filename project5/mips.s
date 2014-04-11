@@ -100,20 +100,20 @@ mj__m_BBS_Start:
  add $sp, $sp, -4
  sw $ra, ($sp)
  # a0: 5(0): Parameter *0 :int
- # a1: 6(1): VarAssg 5 *sz :int
- move $a1, $a0
+ # a2: 6(2): VarAssg 5 *sz :int
+ move $a2, $a0
  # a0: 7(0): Null *Type(int) :int
  move $a0, $zero
- # a2: 8(2): This :BBS
- move $a2, $v0
+ # a1: 8(1): This :BBS
+ move $a1, $v0
  # a0: 9(0): Arg 6 *0 :int
- move $a0, $a1
+ move $a0, $a2
  # a0: 10(0): Call 8 *Init(9) :int
  sw $v0, -4($fp)
  sw $v1, -8($fp)
  sw $a1, -12($fp)
  sw $a2, -16($fp)
- move $v0, $a2
+ move $v0, $a1
  lw $v1, ($v0)
  lw $v1, 12($v1)
  jal $v1
@@ -204,67 +204,67 @@ mj__m_BBS_Sort:
  add $sp, $sp, -4
  sw $fp, ($sp)
  move $fp, $sp
- add $sp, $sp, -48
+ add $sp, $sp, -52
  add $sp, $sp, -4
  sw $ra, ($sp)
- # t4: 25(8): Null *Type(int) :int
- move $t4, $zero
+ # a2: 25(2): Null *Type(int) :int
+ move $a2, $zero
  # a0: 26(0): Null *Type(int) :int
  move $a0, $zero
  # a0: 27(0): Null *Type(int) :int
  move $a0, $zero
- # t3: 28(7): Null *Type(int) :int
- move $t3, $zero
+ # t4: 28(8): Null *Type(int) :int
+ move $t4, $zero
  # a3: 29(3): Null *Type(int) :int
  move $a3, $zero
- # t1: 30(5): Null *Type(int) :int
- move $t1, $zero
+ # t3: 30(7): Null *Type(int) :int
+ move $t3, $zero
  # a1: 31(1): Null *Type(int) :int
  move $a1, $zero
- # t2: 32(6): Null *Type(int) :int
- move $t2, $zero
- # t5: 33(9): Null *Type(int) :int
+ # t5: 32(9): Null *Type(int) :int
  move $t5, $zero
+ # t0: 33(4): Null *Type(int) :int
+ move $t0, $zero
  # a0: 34(0): This :BBS
  move $a0, $v0
- # a0: 35(0): Member 34 *size :int
- lw $a0, 8($a0)
- # a2: 36(2): Int *1 :int
- li $a2, 1
+ # t1: 35(5): Member 34 *size :int
+ lw $t1, 8($a0)
+ # a0: 36(0): Int *1 :int
+ li $a0, 1
  # a0: 37(0): Minus 35 36 :int
- sub $a0, $a0, $a2
- # t0: 38(4): VarAssg 37 *i :int
- move $t0, $a0
- # a2: 39(2): Int *0 :int
- li $a2, 0
+ sub $a0, $t1, $a0
+ # t1: 38(5): VarAssg 37 *i :int
+ move $t1, $a0
+ # t2: 39(6): Int *0 :int
+ li $t2, 0
  # a0: 40(0): Int *1 :int
  li $a0, 1
  # a0: 41(0): Minus 39 40 :int
- sub $a0, $a2, $a0
- # a2: 42(2): VarAssg 41 *aux02 :int
- move $a2, $a0
+ sub $a0, $t2, $a0
+ # t2: 42(6): VarAssg 41 *aux02 :int
+ move $t2, $a0
  # a0: 43(0): Label *lwhile_753751532_start :void
  .lwhile_753751532_start:
  # a0: 44(0): Lt 42 38 :boolean
- slt $a0, $a2, $t0 # a0: 45(0): NBranch 44 *lwhile_753751532_end :void
+ slt $a0, $t2, $t1 # a0: 45(0): NBranch 44 *lwhile_753751532_end :void
  beq $a0, $zero, .lwhile_753751532_end
  # a0: 46(0): Int *1 :int
  li $a0, 1
- # t2: 47(6): VarAssg 46 *j :int
- move $t2, $a0
+ # t5: 47(9): VarAssg 46 *j :int
+ move $t5, $a0
  # a0: 48(0): Label *lwhile_295964671_start :void
  .lwhile_295964671_start:
  # a0: 49(0): Int *1 :int
  li $a0, 1
  # a0: 50(0): Plus 38 49 :int
- add $a0, $t0, $a0
+ add $a0, $t1, $a0
  # a0: 51(0): Lt 47 50 :boolean
- slt $a0, $t2, $a0 # a0: 52(0): NBranch 51 *lwhile_295964671_end :void
+ slt $a0, $t5, $a0 # a0: 52(0): NBranch 51 *lwhile_295964671_end :void
  beq $a0, $zero, .lwhile_295964671_end
  # a0: 53(0): Int *1 :int
  li $a0, 1
  # a0: 54(0): Minus 47 53 :int
- sub $a0, $t2, $a0
+ sub $a0, $t5, $a0
  # a1: 55(1): VarAssg 54 *aux07 :int
  move $a1, $a0
  # a0: 56(0): This :BBS
@@ -276,56 +276,56 @@ mj__m_BBS_Sort:
  add $v1, $v1, 4
  add $v1, $v1, $a0
  lw $a0, ($v1)
- # t3: 59(7): VarAssg 58 *aux04 :int
- move $t3, $a0
+ # t4: 59(8): VarAssg 58 *aux04 :int
+ move $t4, $a0
  # a0: 60(0): This :BBS
  move $a0, $v0
  # a0: 61(0): Member 60 *number :int[]
  lw $a0, 4($a0)
  # a0: 62(0): Index 61 47 :int
- mul $v1, $t2, 4
+ mul $v1, $t5, 4
  add $v1, $v1, 4
  add $v1, $v1, $a0
  lw $a0, ($v1)
  # a3: 63(3): VarAssg 62 *aux05 :int
  move $a3, $a0
  # a0: 64(0): Lt 63 59 :boolean
- slt $a0, $a3, $t3 # a0: 65(0): NBranch 64 *lif_706099045_else :void
+ slt $a0, $a3, $t4 # a0: 65(0): NBranch 64 *lif_706099045_else :void
  beq $a0, $zero, .lif_706099045_else
  # a0: 66(0): Int *1 :int
  li $a0, 1
  # a0: 67(0): Minus 47 66 :int
- sub $a0, $t2, $a0
- # t1: 68(5): VarAssg 67 *aux06 :int
- move $t1, $a0
+ sub $a0, $t5, $a0
+ # t3: 68(7): VarAssg 67 *aux06 :int
+ move $t3, $a0
  # a0: 69(0): This :BBS
  move $a0, $v0
  # a0: 70(0): Member 69 *number :int[]
  lw $a0, 4($a0)
  # a0: 71(0): Index 70 68 :int
- mul $v1, $t1, 4
+ mul $v1, $t3, 4
  add $v1, $v1, 4
  add $v1, $v1, $a0
  lw $a0, ($v1)
- # t5: 72(9): VarAssg 71 *t :int
- move $t5, $a0
+ # t0: 72(4): VarAssg 71 *t :int
+ move $t0, $a0
  # a0: 73(0): This :BBS
  move $a0, $v0
- # a2: 74(2): Member 73 *number :int[]
- lw $a2, 4($a0)
+ # t6: 74(10): Member 73 *number :int[]
+ lw $t6, 4($a0)
  # a0: 75(0): This :BBS
  move $a0, $v0
  # a0: 76(0): Member 75 *number :int[]
  lw $a0, 4($a0)
  # a0: 77(0): Index 76 47 :int
- mul $v1, $t2, 4
+ mul $v1, $t5, 4
  add $v1, $v1, 4
  add $v1, $v1, $a0
  lw $a0, ($v1)
- # a0: 78(0): IndexAssg 74 77 *68(5): VarAssg 67 *aux06 :int :int
- mul $v1, $t1, 4
+ # a0: 78(0): IndexAssg 74 77 *68(7): VarAssg 67 *aux06 :int :int
+ mul $v1, $t3, 4
  add $v1, $v1, 4
- add $v1, $v1, $a2
+ add $v1, $v1, $t6
  sw $a0, ($v1)
  # a0: 79(0): Goto *lif_706099045_done :void
  j .lif_706099045_done
@@ -333,48 +333,48 @@ mj__m_BBS_Sort:
  .lif_706099045_else:
  # a0: 81(0): Int *0 :int
  li $a0, 0
- # t4: 82(8): VarAssg 81 *nt :int
- move $t4, $a0
+ # a2: 82(2): VarAssg 81 *nt :int
+ move $a2, $a0
  # a0: 83(0): Label *lif_706099045_done :void
  .lif_706099045_done:
- # t4: 84(8): Unify 25 82 :int
- # t5: 85(9): Unify 72 33 :int
- # t1: 86(5): Unify 68 30 :int
+ # a2: 84(2): Unify 25 82 :int
+ # t0: 85(4): Unify 72 33 :int
+ # t3: 86(7): Unify 68 30 :int
  # a0: 87(0): Int *1 :int
  li $a0, 1
  # a0: 88(0): Plus 47 87 :int
- add $a0, $t2, $a0
- # t2: 89(6): VarAssg 88 *j :int
- move $t2, $a0
+ add $a0, $t5, $a0
+ # t5: 89(9): VarAssg 88 *j :int
+ move $t5, $a0
  # a0: 90(0): Goto *lwhile_295964671_start :void
  j .lwhile_295964671_start
  # a0: 91(0): Label *lwhile_295964671_end :void
  .lwhile_295964671_end:
- # t4: 92(8): Unify 25 84 :int
- # t5: 93(9): Unify 33 85 :int
+ # a2: 92(2): Unify 25 84 :int
+ # t0: 93(4): Unify 33 85 :int
  # a1: 94(1): Unify 31 55 :int
- # t1: 95(5): Unify 30 86 :int
+ # t3: 95(7): Unify 30 86 :int
  # a3: 96(3): Unify 29 63 :int
- # t3: 97(7): Unify 28 59 :int
- # t2: 98(6): Unify 47 89 :int
+ # t4: 97(8): Unify 28 59 :int
+ # t5: 98(9): Unify 47 89 :int
  # a0: 99(0): Int *1 :int
  li $a0, 1
  # a0: 100(0): Minus 38 99 :int
- sub $a0, $t0, $a0
- # t0: 101(4): VarAssg 100 *i :int
- move $t0, $a0
+ sub $a0, $t1, $a0
+ # t1: 101(5): VarAssg 100 *i :int
+ move $t1, $a0
  # a0: 102(0): Goto *lwhile_753751532_start :void
  j .lwhile_753751532_start
  # a0: 103(0): Label *lwhile_753751532_end :void
  .lwhile_753751532_end:
- # t4: 104(8): Unify 25 92 :int
- # t5: 105(9): Unify 33 93 :int
+ # a2: 104(2): Unify 25 92 :int
+ # t0: 105(4): Unify 33 93 :int
  # a1: 106(1): Unify 31 94 :int
- # t1: 107(5): Unify 30 95 :int
+ # t3: 107(7): Unify 30 95 :int
  # a3: 108(3): Unify 29 96 :int
- # t3: 109(7): Unify 28 97 :int
- # t2: 110(6): Unify 32 98 :int
- # t0: 111(4): Unify 38 101 :int
+ # t4: 109(8): Unify 28 97 :int
+ # t5: 110(9): Unify 32 98 :int
+ # t1: 111(5): Unify 38 101 :int
  # a0: 112(0): Int *0 :int
  li $a0, 0
  # a0: 113(0): Return 112 :void
@@ -498,18 +498,18 @@ mj__m_BBS_Init:
  sw $a0, ($v1)
  # a0: 146(0): This :BBS
  move $a0, $v0
- # a0: 147(0): Member 146 *number :int[]
- lw $a0, 4($a0)
- # a2: 148(2): Int *1 :int
- li $a2, 1
- # a1: 149(1): Int *7 :int
- li $a1, 7
- # a0: 150(0): IndexAssg 147 149 *148(2): Int *1 :int :int
- mul $v1, $a2, 4
+ # a1: 147(1): Member 146 *number :int[]
+ lw $a1, 4($a0)
+ # a0: 148(0): Int *1 :int
+ li $a0, 1
+ # a2: 149(2): Int *7 :int
+ li $a2, 7
+ # a0: 150(0): IndexAssg 147 149 *148(0): Int *1 :int :int
+ mul $v1, $a0, 4
  add $v1, $v1, 4
- add $v1, $v1, $a0
- sw $a1, ($v1)
- move $a0, $a1
+ add $v1, $v1, $a1
+ sw $a2, ($v1)
+ move $a0, $a2
  # a0: 151(0): This :BBS
  move $a0, $v0
  # a0: 152(0): Member 151 *number :int[]
@@ -566,18 +566,18 @@ mj__m_BBS_Init:
  sw $a0, ($v1)
  # a0: 171(0): This :BBS
  move $a0, $v0
- # a2: 172(2): Member 171 *number :int[]
- lw $a2, 4($a0)
+ # a1: 172(1): Member 171 *number :int[]
+ lw $a1, 4($a0)
  # a0: 173(0): Int *6 :int
  li $a0, 6
- # a1: 174(1): Int *6 :int
- li $a1, 6
+ # a2: 174(2): Int *6 :int
+ li $a2, 6
  # a0: 175(0): IndexAssg 172 174 *173(0): Int *6 :int :int
  mul $v1, $a0, 4
  add $v1, $v1, 4
- add $v1, $v1, $a2
- sw $a1, ($v1)
- move $a0, $a1
+ add $v1, $v1, $a1
+ sw $a2, ($v1)
+ move $a0, $a2
  # a0: 176(0): This :BBS
  move $a0, $v0
  # a0: 177(0): Member 176 *number :int[]
@@ -594,32 +594,31 @@ mj__m_BBS_Init:
  move $a0, $a2
  # a0: 181(0): This :BBS
  move $a0, $v0
- # a0: 182(0): Member 181 *number :int[]
- lw $a0, 4($a0)
+ # a1: 182(1): Member 181 *number :int[]
+ lw $a1, 4($a0)
  # a2: 183(2): Int *8 :int
  li $a2, 8
- # a1: 184(1): Int *19 :int
- li $a1, 19
+ # a0: 184(0): Int *19 :int
+ li $a0, 19
  # a0: 185(0): IndexAssg 182 184 *183(2): Int *8 :int :int
  mul $v1, $a2, 4
  add $v1, $v1, 4
- add $v1, $v1, $a0
- sw $a1, ($v1)
- move $a0, $a1
+ add $v1, $v1, $a1
+ sw $a0, ($v1)
  # a0: 186(0): This :BBS
  move $a0, $v0
- # a0: 187(0): Member 186 *number :int[]
- lw $a0, 4($a0)
- # a2: 188(2): Int *9 :int
- li $a2, 9
- # a1: 189(1): Int *5 :int
- li $a1, 5
- # a0: 190(0): IndexAssg 187 189 *188(2): Int *9 :int :int
- mul $v1, $a2, 4
+ # a1: 187(1): Member 186 *number :int[]
+ lw $a1, 4($a0)
+ # a0: 188(0): Int *9 :int
+ li $a0, 9
+ # a2: 189(2): Int *5 :int
+ li $a2, 5
+ # a0: 190(0): IndexAssg 187 189 *188(0): Int *9 :int :int
+ mul $v1, $a0, 4
  add $v1, $v1, 4
- add $v1, $v1, $a0
- sw $a1, ($v1)
- move $a0, $a1
+ add $v1, $v1, $a1
+ sw $a2, ($v1)
+ move $a0, $a2
  # a0: 191(0): Int *0 :int
  li $a0, 0
  # a0: 192(0): Return 191 :void
