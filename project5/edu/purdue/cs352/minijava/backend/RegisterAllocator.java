@@ -407,6 +407,7 @@ public class RegisterAllocator {
     List<CFNode> cfnodes;
     List<TempNode> tempnodes;
     List<TempNode> pins;
+    List<TempNode> potentialSpills;
     Graph interference;
     Deque<TempNode> stack;
     int numOfSpills;
@@ -418,6 +419,7 @@ public class RegisterAllocator {
         pins = new ArrayList<TempNode>();
         stack = new ArrayDeque<TempNode>();
         interference = new Graph();
+        potentialSpills = new ArrayList<TempNode>();
 
         numOfSpills = 0;
 
@@ -451,7 +453,7 @@ public class RegisterAllocator {
         //System.out.println("New Method");
         RegisterAllocator ra = new RegisterAllocator();
         ra.block = block;
-
+        int i = 0;
         while (true) {
             /* FILLIN: This body may work fine, in which case you will have to
              * write the relevant functions, or you may prefer to implement it
@@ -474,7 +476,7 @@ public class RegisterAllocator {
 
             // liveness analysis
             ra.liveness(); 
-
+            ra.prettyPrintCFNodes();
             // build the temporaries
             ra.initTempNodes();
 
@@ -487,8 +489,8 @@ public class RegisterAllocator {
             actualSpills = ra.select(freeRegisters);
             if (actualSpills.size() == 0) break;
 
-
-            // OK, rewrite to perform the spills
+            if(i++ == 1) break;
+            // OK, rewrite  to perform the spills
             ra.performSpills(actualSpills);
         }
 
@@ -554,7 +556,7 @@ public class RegisterAllocator {
     }
     public void liveness() {
             
-        for(int run = 0; run < 20; run++){
+        for(int run = 0; run < 1; run++){
             CFNode node;
             Set<Variable> out, in, def, use, succIn;
             Set<CFNode> succ;
@@ -583,7 +585,7 @@ public class RegisterAllocator {
 
                 //System.out.println("Statement " + ssa.getIndex() + " analysis: " + ssa);
 
-               
+               System.out.println(node);
                 
                 
                 // if it's not the first node being analyzed
@@ -637,9 +639,9 @@ public class RegisterAllocator {
                     i = max + 1;
                     //System.out.println("Going back to " + i);
                 }
-
-
-              /*  System.out.println("Out");
+                
+              /*  System.out.println("----------------------------");
+                System.out.println("Out");
                 for(Variable v : out) {
                     System.out.println("    "+v.master);
                 }
@@ -649,7 +651,8 @@ public class RegisterAllocator {
                 }
                
                 System.out.println("end"); 
-                System.out.println("");  */
+                System.out.println("");  
+                 System.out.println("----------------------------");*/
                 
             }
         }
@@ -694,7 +697,7 @@ public class RegisterAllocator {
         }
 
         for(TempNode temp : tempnodes) {
-                interference.addVertex(temp);
+            interference.addVertex(temp);
         }
 
            // System.out.println("Degree of " + temp);
@@ -711,23 +714,28 @@ public class RegisterAllocator {
             for(TempNode n : pins) {
                 interference.remove(n);
             } 
-
             while(!interference.isEmpty()) {
-                TempNode min = interference.findDegreeLessNode(freeRegisters);
-                degree = interference.getDegree(min);
 
-                if(degree >= (freeRegisters)) {
-                    min = interference.findMinNode();
-                    min.setPotentialSpill(true);
-                    stack.addLast(min);
-                } else {
-                    stack.push(min);
+                while(!interference.isEmpty()) {
+                    TempNode min = interference.findDegreeLessNode(freeRegisters);
+                    degree = interference.getDegree(min);
+
+                    if(degree >= (freeRegisters)) {
+                        break;
+                    } else {
+                        stack.push(min);
+                    }
+                    interference.remove(min);
                 }
+                if(interference.isEmpty()) break;
 
-                interference.remove(min);
+                TempNode node = interference.findDegreeLessNode(freeRegisters);
+                node.setPotentialSpill(true);
+                interference.remove(node);
+                potentialSpills.add(node);
 
             }
-   
+
             for(TempNode n : pins) {
                 stack.push(n);
             } 
@@ -741,86 +749,102 @@ public class RegisterAllocator {
 
         /*Create new graph While stack has nodes, color 
         if color is invalid, spill */
-            TempNode node;
+        TempNode node;
         int color;
         while(!stack.isEmpty()) {
             node = stack.pop();
             node.setRemoved(false);
             interference.size++;
-            if(node.isPinned()) {
+            if(node.isPinned() || node.isPotentialSpill()) {
               //  System.out.println("Pinned node color is " + node.getColor());
                continue;
             }
 
             color = interference.findColor(node, freeRegisters);
-            if(color == -1) {
-            //System.out.println("Fuck");
-                spills.add(node);
-                break;
-            }
-            
                // System.out.println("color is " + color);
             node.setColor(color);
         }
 
-        while(!stack.isEmpty()) spills.add(stack.pop());
+        for(TempNode n : potentialSpills) {
+            n.setRemoved(false);
+            color = interference.findColor(n, freeRegisters);
+            if(color == -1) {
+                spills.add(n);
+            } else {
+                // System.out.println("color is " + color);
+                n.setPotentialSpill(false);
+                n.setColor(color);    
+            }    
+        }
 
         return spills;
     } 
 
     public void performSpills(Set<TempNode> actualSpills) {
 
-        List<SSAStatement> list = new ArrayList<SSAStatement>();
         for(TempNode node : actualSpills) {
-            System.out.println("Start Temp");
+             //System.out.println("Spilling:" +node);
+            Set<SSAStatement> sup = new HashSet<SSAStatement>();
             Variable spill = node.getVariable();
-            int size = block.size();
-            for(int i = 0; i < size; i++) {
-                System.out.println("Start SSA");
+
+            for(int i = 0; i < block.size(); i++) {
                 SSAStatement stat = block.get(i);
-                 checkLoad(spill, stat, list);
-                 list.add(stat);
-                 checkStore(spill, stat, list);
-                 System.out.println("end SSA");
+                if(sup.contains(stat)){ } else {
+                 checkStore(spill, stat, i, sup);
+                checkLoad(spill, stat, i , sup);
+                //System.out.println(findCFNode(stat));
             }
-            System.out.println("End Temp");
+            }
+            numOfSpills++;
         }
-
-        System.out.println("New:");
-        for(SSAStatement s: list) {
-            System.out.println(s);
-        }
-        System.out.println(" real end");
         
-        block = list;   
+        //throw new Error("saf");
+        //block = list;   
         interference.clear();
+        variables.clear();
+        cfnodes.clear();
+        tempnodes.clear();
+        pins.clear();
+        stack.clear();
+        potentialSpills.clear();
+        //throw new Error("Working on it");
 
     }
 
 
-    public boolean checkLoad(Variable spill, SSAStatement master, List<SSAStatement> in) {
-        if(!checkUses(spill, master)) return false;
-        System.out.println("Go");
+    public void checkLoad(Variable spill, SSAStatement master, int i, Set<SSAStatement> dup) {
+        //System.out.println(master);
+        if(!spill.contains(master.getLeft()) && !spill.contains(master.getRight())) return;
         SSAStatement load = new SSAStatement(null, Op.Load, numOfSpills);
-        in.add(load);
-        return true;
-    }
-
-    public boolean checkStore(Variable spill, SSAStatement master, List<SSAStatement> in) {
-        Op op = master.getOp();
-        if(op == Op.Unify || op == Op.Alias) return false;
-        System.out.println("Go");
-        if(spill.contains(master)) {    
-           SSAStatement store = new SSAStatement(null, Op.Store, master, null, numOfSpills);
-           in.add(store);
-        } else return false;
-        return true;
-    }
-
-    public boolean checkUses(Variable spill, SSAStatement master) {
+        block.add(i,load);
+        dup.add(load);
         SSAStatement left = master.getLeft();
         SSAStatement right = master.getRight();
-        return (spill.contains(left) || spill.contains(right));
+        //System.out.println("Hey");
+        //System.out.println(load);
+        if(left != null) {
+            master.setLeft(load);
+           // System.out.println(left);
+        }
+
+        if(right != null) {
+           master.setRight(load);
+          // System.out.println(right);
+        }
+
+        //System.out.println("done");
+    }
+
+    public void checkStore(Variable spill, SSAStatement master, int i, Set<SSAStatement> dup) {
+        Op op = master.getOp();
+        // unifies don't do anything, no need to store for them
+        if(op == Op.Unify || op == Op.Alias) return;
+
+        if(spill.contains(master)) {    
+           SSAStatement store = new SSAStatement(null, Op.Store, master, null, numOfSpills);
+           block.add(i+1,store);
+           dup.add(store);
+        } 
     }
 
     public void color() {
@@ -842,8 +866,6 @@ public class RegisterAllocator {
             findUnify(right, toRemove);
         
         Variable main = findVariable(stat);
-        
-        if(main == null) throw new Error("Couldn't find variable");
 
         Variable l = findVariable(left);
 
@@ -1096,5 +1118,25 @@ public class RegisterAllocator {
         }
         return false;
     }
+private void prettyPrintCFNodes() {
+            for(CFNode node : cfnodes) {
+                    int len = node.ssa.toString().length();
+                    System.out.print(node.ssa);
+                    for(int k=0; k<40-len; k++) 
+                        System.out.print(" ");
 
+                    len = 40;
+                    for(Variable n : node.in) {
+                        System.out.print(n.master.getIndex()+" ");
+                        len += (((Integer)n.master.getIndex()).toString().length()) + 1;
+                    }
+                    for(int k=len; k<60; k++) 
+                        System.out.print(" ");
+                    System.out.print(" |  ");
+                    for(Variable n : node.out) {
+                        System.out.print(n.master.getIndex()+" ");
+                    }
+                    System.out.println();
+            }
+        }
 }

@@ -66,7 +66,7 @@ public class SSACompilerFrontend {
         }
 
         if (regAlloc) {
-            RegisterAllocator.alloc(sprog, 15);
+            RegisterAllocator.alloc(sprog, 2);
         }
 
         System.out.println(sprog);

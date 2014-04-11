@@ -9,7 +9,7 @@ class Spiller {
         int a;
         int b;
         int c;
-        int d;
+        /*int d;
         int e;
         int f;
         int g;
@@ -31,12 +31,12 @@ class Spiller {
         int w;
         int x;
         int y;
-        int z;
+        int z;*/
 
         a = 1;
         b = 2;
         c = 3;
-        d = 4;
+       /* d = 4;
         e = 5;
         f = 6;
         g = 7;
@@ -58,12 +58,12 @@ class Spiller {
         w = 23;
         x = 24;
         y = 25;
-        z = 26;
+        z = 26;*/
 
         System.out.println(a);
         System.out.println(b);
         System.out.println(c);
-        System.out.println(d);
+      /*  System.out.println(d);
         System.out.println(e);
         System.out.println(f);
         System.out.println(g);
@@ -85,7 +85,7 @@ class Spiller {
         System.out.println(w);
         System.out.println(x);
         System.out.println(y);
-        System.out.println(z);
+        System.out.println(z);*/
 
         return 0;
     }
