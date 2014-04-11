@@ -453,7 +453,7 @@ public class RegisterAllocator {
         //System.out.println("New Method");
         RegisterAllocator ra = new RegisterAllocator();
         ra.block = block;
-        int i = 0;
+       // int i = 0;
         while (true) {
             /* FILLIN: This body may work fine, in which case you will have to
              * write the relevant functions, or you may prefer to implement it
@@ -476,7 +476,7 @@ public class RegisterAllocator {
 
             // liveness analysis
             ra.liveness(); 
-            ra.prettyPrintCFNodes();
+            
             // build the temporaries
             ra.initTempNodes();
 
@@ -489,7 +489,7 @@ public class RegisterAllocator {
             actualSpills = ra.select(freeRegisters);
             if (actualSpills.size() == 0) break;
 
-            if(i++ == 1) break;
+            //if(i++ == 1) break;
             // OK, rewrite  to perform the spills
             ra.performSpills(actualSpills);
         }
@@ -556,7 +556,7 @@ public class RegisterAllocator {
     }
     public void liveness() {
             
-        for(int run = 0; run < 1; run++){
+        for(int run = 0; run < 20; run++){
             CFNode node;
             Set<Variable> out, in, def, use, succIn;
             Set<CFNode> succ;
@@ -585,7 +585,7 @@ public class RegisterAllocator {
 
                 //System.out.println("Statement " + ssa.getIndex() + " analysis: " + ssa);
 
-               System.out.println(node);
+              // System.out.println(node);
                 
                 
                 // if it's not the first node being analyzed
@@ -790,10 +790,10 @@ public class RegisterAllocator {
             for(int i = 0; i < block.size(); i++) {
                 SSAStatement stat = block.get(i);
                 if(sup.contains(stat)){ } else {
-                 checkStore(spill, stat, i, sup);
-                checkLoad(spill, stat, i , sup);
+                    checkStore(spill, stat, i, sup);
+                    checkLoad(spill, stat, i , sup);
                 //System.out.println(findCFNode(stat));
-            }
+                }
             }
             numOfSpills++;
         }
@@ -1055,12 +1055,23 @@ public class RegisterAllocator {
         CFNode succPred;
         SSAStatement ssa;
         int prevSSA, nextSSA;
-
+        int firstBlockIndex = block.get(0).getIndex();
+        int lastBlockIndex = block.get(block.size()-1).getIndex();
         ssa = node.getSSA();
+        if(firstBlockIndex != ssa.getIndex()) {
+            prevSSA = (block.get(block.indexOf(ssa)-1)).getIndex();
+        } else {
+            prevSSA = -1;
+        }
 
-        prevSSA = ssa.getIndex() - 1;
-        nextSSA = prevSSA + 2;
+        if(lastBlockIndex != ssa.getIndex()) {
+            nextSSA = (block.get(block.indexOf(ssa)+1)).getIndex();
+        } else {
+            nextSSA = -1;
+        }
+    
         
+     
         succPred = findCFNode(prevSSA);
         if( succPred != null) {
             set = node.getPredSucc("pred");
@@ -1118,25 +1129,4 @@ public class RegisterAllocator {
         }
         return false;
     }
-private void prettyPrintCFNodes() {
-            for(CFNode node : cfnodes) {
-                    int len = node.ssa.toString().length();
-                    System.out.print(node.ssa);
-                    for(int k=0; k<40-len; k++) 
-                        System.out.print(" ");
-
-                    len = 40;
-                    for(Variable n : node.in) {
-                        System.out.print(n.master.getIndex()+" ");
-                        len += (((Integer)n.master.getIndex()).toString().length()) + 1;
-                    }
-                    for(int k=len; k<60; k++) 
-                        System.out.print(" ");
-                    System.out.print(" |  ");
-                    for(Variable n : node.out) {
-                        System.out.print(n.master.getIndex()+" ");
-                    }
-                    System.out.println();
-            }
-        }
 }
