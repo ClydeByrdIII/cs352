@@ -100,20 +100,20 @@ mj__m_BBS_Start:
  add $sp, $sp, -4
  sw $ra, ($sp)
  # a0: 5(0): Parameter *0 :int
- # a1: 6(1): VarAssg 5 *sz :int
- move $a1, $a0
+ # a2: 6(2): VarAssg 5 *sz :int
+ move $a2, $a0
  # a0: 7(0): Null *Type(int) :int
  move $a0, $zero
- # a2: 8(2): This :BBS
- move $a2, $v0
+ # a1: 8(1): This :BBS
+ move $a1, $v0
  # a0: 9(0): Arg 6 *0 :int
- move $a0, $a1
+ move $a0, $a2
  # a0: 10(0): Call 8 *Init(9) :int
  sw $v0, -4($fp)
  sw $v1, -8($fp)
  sw $a1, -12($fp)
  sw $a2, -16($fp)
- move $v0, $a2
+ move $v0, $a1
  lw $v1, ($v0)
  lw $v1, 12($v1)
  jal $v1
@@ -243,24 +243,24 @@ mj__m_BBS_Sort:
  sub $a0, $a0, $t0
  # t0: 42(4): VarAssg 41 *aux02 :int
  move $t0, $a0
- # a0: 43(0): Label *lwhile_682976601_start :void
- .lwhile_682976601_start:
+ # a0: 43(0): Label *lwhile_964387192_start :void
+ .lwhile_964387192_start:
  # a0: 44(0): Lt 42 38 :boolean
- slt $a0, $t0, $a1 # a0: 45(0): NBranch 44 *lwhile_682976601_end :void
- beq $a0, $zero, .lwhile_682976601_end
+ slt $a0, $t0, $a1 # a0: 45(0): NBranch 44 *lwhile_964387192_end :void
+ beq $a0, $zero, .lwhile_964387192_end
  # a0: 46(0): Int *1 :int
  li $a0, 1
  # a3: 47(3): VarAssg 46 *j :int
  move $a3, $a0
- # a0: 48(0): Label *lwhile_487639792_start :void
- .lwhile_487639792_start:
+ # a0: 48(0): Label *lwhile_1396452035_start :void
+ .lwhile_1396452035_start:
  # a0: 49(0): Int *1 :int
  li $a0, 1
  # a0: 50(0): Plus 38 49 :int
  add $a0, $a1, $a0
  # a0: 51(0): Lt 47 50 :boolean
- slt $a0, $a3, $a0 # a0: 52(0): NBranch 51 *lwhile_487639792_end :void
- beq $a0, $zero, .lwhile_487639792_end
+ slt $a0, $a3, $a0 # a0: 52(0): NBranch 51 *lwhile_1396452035_end :void
+ beq $a0, $zero, .lwhile_1396452035_end
  # a0: 53(0): Int *1 :int
  li $a0, 1
  # a0: 54(0): Minus 47 53 :int
@@ -290,8 +290,8 @@ mj__m_BBS_Sort:
  # t5: 63(9): VarAssg 62 *aux05 :int
  move $t5, $a0
  # a0: 64(0): Lt 63 59 :boolean
- slt $a0, $t5, $t4 # a0: 65(0): NBranch 64 *lif_964387192_else :void
- beq $a0, $zero, .lif_964387192_else
+ slt $a0, $t5, $t4 # a0: 65(0): NBranch 64 *lif_320574182_else :void
+ beq $a0, $zero, .lif_320574182_else
  # a0: 66(0): Int *1 :int
  li $a0, 1
  # a0: 67(0): Minus 47 66 :int
@@ -328,16 +328,16 @@ mj__m_BBS_Sort:
  add $v1, $v1, $a0
  sw $t6, ($v1)
  move $a0, $t6
- # a0: 79(0): Goto *lif_964387192_done :void
- j .lif_964387192_done
- # a0: 80(0): Label *lif_964387192_else :void
- .lif_964387192_else:
+ # a0: 79(0): Goto *lif_320574182_done :void
+ j .lif_320574182_done
+ # a0: 80(0): Label *lif_320574182_else :void
+ .lif_320574182_else:
  # a0: 81(0): Int *0 :int
  li $a0, 0
  # t2: 82(6): VarAssg 81 *nt :int
  move $t2, $a0
- # a0: 83(0): Label *lif_964387192_done :void
- .lif_964387192_done:
+ # a0: 83(0): Label *lif_320574182_done :void
+ .lif_320574182_done:
  # t2: 84(6): Unify 25 82 :int
  # a2: 85(2): Unify 72 33 :int
  # t1: 86(5): Unify 68 30 :int
@@ -347,10 +347,10 @@ mj__m_BBS_Sort:
  add $a0, $a3, $a0
  # a3: 89(3): VarAssg 88 *j :int
  move $a3, $a0
- # a0: 90(0): Goto *lwhile_487639792_start :void
- j .lwhile_487639792_start
- # a0: 91(0): Label *lwhile_487639792_end :void
- .lwhile_487639792_end:
+ # a0: 90(0): Goto *lwhile_1396452035_start :void
+ j .lwhile_1396452035_start
+ # a0: 91(0): Label *lwhile_1396452035_end :void
+ .lwhile_1396452035_end:
  # t2: 92(6): Unify 25 84 :int
  # a2: 93(2): Unify 33 85 :int
  # t3: 94(7): Unify 31 55 :int
@@ -364,10 +364,10 @@ mj__m_BBS_Sort:
  sub $a0, $a1, $a0
  # a1: 101(1): VarAssg 100 *i :int
  move $a1, $a0
- # a0: 102(0): Goto *lwhile_682976601_start :void
- j .lwhile_682976601_start
- # a0: 103(0): Label *lwhile_682976601_end :void
- .lwhile_682976601_end:
+ # a0: 102(0): Goto *lwhile_964387192_start :void
+ j .lwhile_964387192_start
+ # a0: 103(0): Label *lwhile_964387192_end :void
+ .lwhile_964387192_end:
  # t2: 104(6): Unify 25 92 :int
  # a2: 105(2): Unify 33 93 :int
  # t3: 106(7): Unify 31 94 :int
@@ -401,15 +401,15 @@ mj__m_BBS_Print:
  li $a0, 0
  # a1: 116(1): VarAssg 115 *j :int
  move $a1, $a0
- # a0: 117(0): Label *lwhile_320574182_start :void
- .lwhile_320574182_start:
+ # a0: 117(0): Label *lwhile_1795478472_start :void
+ .lwhile_1795478472_start:
  # a0: 118(0): This :BBS
  move $a0, $v0
  # a0: 119(0): Member 118 *size :int
  lw $a0, 8($a0)
  # a0: 120(0): Lt 116 119 :boolean
- slt $a0, $a1, $a0 # a0: 121(0): NBranch 120 *lwhile_320574182_end :void
- beq $a0, $zero, .lwhile_320574182_end
+ slt $a0, $a1, $a0 # a0: 121(0): NBranch 120 *lwhile_1795478472_end :void
+ beq $a0, $zero, .lwhile_1795478472_end
  # a0: 122(0): This :BBS
  move $a0, $v0
  # a0: 123(0): Member 122 *number :int[]
@@ -435,10 +435,10 @@ mj__m_BBS_Print:
  add $a0, $a1, $a0
  # a1: 128(1): VarAssg 127 *j :int
  move $a1, $a0
- # a0: 129(0): Goto *lwhile_320574182_start :void
- j .lwhile_320574182_start
- # a0: 130(0): Label *lwhile_320574182_end :void
- .lwhile_320574182_end:
+ # a0: 129(0): Goto *lwhile_1795478472_start :void
+ j .lwhile_1795478472_start
+ # a0: 130(0): Label *lwhile_1795478472_end :void
+ .lwhile_1795478472_end:
  # a1: 131(1): Unify 116 128 :int
  # a0: 132(0): Int *0 :int
  li $a0, 0

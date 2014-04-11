@@ -555,8 +555,10 @@ public class RegisterAllocator {
         }
     }
     public void liveness() {
-            
-        for(int run = 0; run < 20; run++){
+        boolean change1, change2, change3, change4;
+        change1 = change2 = change3 = change4 = true;
+        while(change1 || change2 || change3 || change4){
+            change1 = change2 = change3 = change4 = false;
             CFNode node;
             Set<Variable> out, in, def, use, succIn;
             Set<CFNode> succ;
@@ -612,17 +614,17 @@ public class RegisterAllocator {
                         //System.out.println(findCFNode(succSSA));
 
                         succIn = findCFNode(succSSA).getSet("in");
-                        out.addAll(succIn);
+                        change1 = out.addAll(succIn);
                     }
                 }
                  for(Variable v : def)
-                    out.add(v);
+                   change2 = out.add(v);
                 for(Variable v : out) {
                     if(!def.contains(v)) 
-                        in.add(v);
+                        change3 = in.add(v);
                 }
 
-                in.addAll(use);
+                change4 = in.addAll(use);
 
                 done.add(index);
 
@@ -799,7 +801,7 @@ public class RegisterAllocator {
         }
         
         //throw new Error("saf");
-        //block = list;   
+         
         interference.clear();
         variables.clear();
         cfnodes.clear();
@@ -809,42 +811,6 @@ public class RegisterAllocator {
         potentialSpills.clear();
         //throw new Error("Working on it");
 
-    }
-
-
-    public void checkLoad(Variable spill, SSAStatement master, int i, Set<SSAStatement> dup) {
-        //System.out.println(master);
-        if(!spill.contains(master.getLeft()) && !spill.contains(master.getRight())) return;
-        SSAStatement load = new SSAStatement(null, Op.Load, numOfSpills);
-        block.add(i,load);
-        dup.add(load);
-        SSAStatement left = master.getLeft();
-        SSAStatement right = master.getRight();
-        //System.out.println("Hey");
-        //System.out.println(load);
-        if(left != null) {
-            master.setLeft(load);
-           // System.out.println(left);
-        }
-
-        if(right != null) {
-           master.setRight(load);
-          // System.out.println(right);
-        }
-
-        //System.out.println("done");
-    }
-
-    public void checkStore(Variable spill, SSAStatement master, int i, Set<SSAStatement> dup) {
-        Op op = master.getOp();
-        // unifies don't do anything, no need to store for them
-        if(op == Op.Unify || op == Op.Alias) return;
-
-        if(spill.contains(master)) {    
-           SSAStatement store = new SSAStatement(null, Op.Store, master, null, numOfSpills);
-           block.add(i+1,store);
-           dup.add(store);
-        } 
     }
 
     public void color() {
@@ -1128,5 +1094,40 @@ public class RegisterAllocator {
             }
         }
         return false;
+    }
+    
+    public void checkLoad(Variable spill, SSAStatement master, int i, Set<SSAStatement> dup) {
+        //System.out.println(master);
+        if(!spill.contains(master.getLeft()) && !spill.contains(master.getRight())) return;
+        SSAStatement load = new SSAStatement(null, Op.Load, numOfSpills);
+        block.add(i,load);
+        dup.add(load);
+        SSAStatement left = master.getLeft();
+        SSAStatement right = master.getRight();
+        //System.out.println("Hey");
+        //System.out.println(load);
+        if(left != null) {
+            master.setLeft(load);
+           // System.out.println(left);
+        }
+
+        if(right != null) {
+           master.setRight(load);
+          // System.out.println(right);
+        }
+
+        //System.out.println("done");
+    }
+
+    public void checkStore(Variable spill, SSAStatement master, int i, Set<SSAStatement> dup) {
+        Op op = master.getOp();
+        // unifies don't do anything, no need to store for them
+        if(op == Op.Unify || op == Op.Alias) return;
+
+        if(spill.contains(master)) {    
+           SSAStatement store = new SSAStatement(null, Op.Store, master, null, numOfSpills);
+           block.add(i+1,store);
+           dup.add(store);
+        } 
     }
 }
