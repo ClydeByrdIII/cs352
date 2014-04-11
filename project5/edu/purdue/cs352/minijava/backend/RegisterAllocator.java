@@ -184,9 +184,10 @@ public class RegisterAllocator {
         // FILLIN...
         Set<TempNode> live;
         Variable master;
-        int color;
-        boolean removed;
+        int color = -1;
+        boolean removed = true;
         boolean pinned;
+        boolean potentialSpill;
 
         public TempNode(Variable var) {
             master = var;
@@ -196,7 +197,7 @@ public class RegisterAllocator {
                     pinned = true;
                     color = s.getRegister();
                     pins.add(this);
-                   // System.out.println("Pinned nigga "+ s.getRegister());
+                    //System.out.println("Pinned nigga "+ s.getRegister() + " size " + var.getUnifedSSA().size());
                     break;
                 }
             }
@@ -242,6 +243,14 @@ public class RegisterAllocator {
             return removed;
         }
 
+        public void setPotentialSpill(boolean isPotentialSpill) {
+            potentialSpill = isPotentialSpill;
+        }
+
+        public boolean isPotentialSpill() {
+            return potentialSpill;
+        }
+
         public String toString() {
             StringBuilder string = new StringBuilder("TempNode");
             string.append('\n');
@@ -266,62 +275,50 @@ public class RegisterAllocator {
         }
 
         public void addVertex(TempNode temp) {
-            Set<TempNode> set;
-            if(!adj.containsKey(temp)) {
-                set = new HashSet<TempNode>();
-            } else {
-                set = adj.get(temp);
-            }
+            temp.setRemoved(false);
             adj.put(temp, temp.getAdjList());
             size++;
         }
+
         public Set<TempNode> getNeighbors(TempNode node) {
             return adj.get(node);
         }
 
-        public TempNode findDegreeLessNode(int k) {
-            TempNode greater = null;
+        public TempNode findNode() {
+            TempNode min = null;
+            int degree = Integer.MAX_VALUE, mini;
             for(TempNode i : adj.keySet()){
-                if(i.isRemoved()) continue;
-                if(this.getDegree(i) < k) {
-                    return i;
-                } else {
-                    greater = i;
+                if(i.isRemoved() || i.isPinned()) {
+                    continue;
                 }
+                mini = this.getDegree(i);
+                if(mini < degree) {
+                    min = i;
+                    degree = mini;
+                } 
             }
-            return greater;
+            return min;
         }
 
         public void color() {
-            for(TempNode i : adj.keySet()){
-                if(i.getColor() < 0) continue;
+            for(TempNode i : tempnodes){
+                if(i.getColor() < 0) { 
+                    continue; 
+                }
+
                 for(SSAStatement s : i.getVariable().getUnifedSSA()) {
                     s.setRegister(i.getColor());
                 }
             }  
         }
 
-        public TempNode leastUsedNode() {
-            TempNode min = null;
-            int degree = 999999;
-            for(TempNode i : adj.keySet()){
-                if(i.isRemoved()) continue;
-
-                int lower = this.getDegree(i);
-                if(lower < degree) {
-                    min = i;
-                    degree = lower;
-                }
-            }
-            return min;
-        }
-
         public int getDegree(TempNode temp) {
             int degree = 0;
             if(adj.containsKey(temp)) {
                 for(TempNode node : adj.get(temp)){
-                    if(!node.isRemoved())
+                    if(!node.isRemoved()){
                         degree++;
+                    }
                 }
             } else {
                 degree = -1;
@@ -330,24 +327,18 @@ public class RegisterAllocator {
         }
 
         public void remove(TempNode temp) {
-            if(adj.containsKey(temp)) {
-                temp.setRemoved(true);
-                if(!temp.isPinned())
-                    temp.setColor(-1);
-                size--;
-            }
+            
+            temp.setRemoved(true);
+            size--;
+            if(!temp.isPinned() && !temp.isRemoved()){
+                    temp.setColor(-1);  
+            }       
+            
         }  
         public int findColor(TempNode temp , int registers) {
 
             Set<TempNode> set = this.getNeighbors(temp);
-            List<Integer> colors = new ArrayList<Integer>();
-            List<Integer> pins = new ArrayList<Integer>();
-
-            for(TempNode t : tempnodes) {
-                if(t.isPinned()) {
-                    pins.add(t.getColor());
-                }
-            }
+            Set<Integer> colors = new HashSet<Integer>();
             //System.out.println("Computing color for: " + temp + " color is " + temp.getColor());
 
             for(TempNode node : set) {
@@ -360,8 +351,8 @@ public class RegisterAllocator {
                 colors.add(neighborColor);
             }
 
-            for(int i = 0; i < registers; i++) {
-                if(!colors.contains(i) && !pins.contains(i)){
+            for(int i = 0; i < registers ; i++) {
+                if(!colors.contains(i)){
                     return i;
                 }
             }
@@ -469,7 +460,6 @@ public class RegisterAllocator {
             // liveness analysis
             ra.liveness(); 
 
-
             // build the temporaries
             ra.initTempNodes();
 
@@ -500,7 +490,7 @@ public class RegisterAllocator {
         for(SSAStatement s : block) {
             Variable var = new Variable(s);
             variables.add(var);
-                //System.out.println(var);
+            //System.out.println(var);
         }
     }
 
@@ -508,9 +498,9 @@ public class RegisterAllocator {
         List<Variable> toRemove = new ArrayList<Variable>();
 
         for(Variable var : variables) {
-            Op op = var.master.getOp();
+            Op op = var.getSSA().getOp();
             if((op == Op.Unify || op == Op.Alias) && !toRemove.contains(var)) {
-                findUnify(var.master, toRemove);
+                findUnify(var.getSSA(), toRemove);
             }
         } 
 
@@ -665,7 +655,6 @@ public class RegisterAllocator {
 
         for(CFNode cfnode :cfnodes ){
             for(TempNode temp : tempnodes) {
-                if(temp.isPinned())continue;
                 Variable var = temp.getVariable();
                 Set<Variable> set = cfnode.getSet("in");
                 if(set.contains(var)) {
@@ -692,7 +681,6 @@ public class RegisterAllocator {
         }
 
         for(TempNode temp : tempnodes) {
-           // System.out.println(temp);
                 interference.addVertex(temp);
         }
 
@@ -706,26 +694,24 @@ public class RegisterAllocator {
         public void simplify(int freeRegisters) {
             /*  while graph is not empty find the min degree */
             int degree;
-            List<TempNode> toRemove = new ArrayList<TempNode>();
-            /*for(Set<TempNode> set : interference.adj.values()){
+    
+           /* for(Set<TempNode> set : interference.adj.values()){
                 for(TempNode i : set) {
                     if(i.isPinned()) {
-                        toRemove.add(i);
+                        stack.push(i)
                     }
                 }
-                for(TempNode i : toRemove) {
-                    if(set.contains(i))
-                        set.remove(i);
-                }
-                toRemove.clear();
             } */
+            for(TempNode n : pins) {
+                interference.remove(n);
+            } 
 
             while(!interference.isEmpty()) {
-                TempNode min = interference.findDegreeLessNode(freeRegisters);
+                TempNode min = interference.findNode();
                 degree = interference.getDegree(min);
 
-                if(degree >= (freeRegisters)) {
-                    min = interference.leastUsedNode();
+                if(degree >= (freeRegisters)-1) {
+                    min.setPotentialSpill(true);
                     stack.addLast(min);
                 } else {
                     stack.push(min);
@@ -755,21 +741,20 @@ public class RegisterAllocator {
             node.setRemoved(false);
             interference.size++;
             if(node.isPinned()) {
+              //  System.out.println("Pinned node color is " + node.getColor());
                continue;
             }
+
             color = interference.findColor(node, freeRegisters);
             if(color == -1) {
             //System.out.println("Fuck");
                 spills.add(node);
                 break;
             }
+            
+               // System.out.println("color is " + color);
             node.setColor(color);
         }
-
-        while(!stack.isEmpty()) {
-            spills.add(stack.pop());
-        }
-
 
         return spills;
     }
@@ -816,16 +801,14 @@ public class RegisterAllocator {
     }
 
     public Variable findVariable(SSAStatement stat) {
-        for(Variable var : variables) {
-            if(var.contains(stat)) return var;
-        }
-        return null;
+        return findVariable(stat.getIndex());
     }
 
     public Variable findVariable(int index) {
         for(Variable var: variables) {
-            if(var.contains(index))
+            if(var.contains(index)){
                 return var;
+            }
         }
         return null;
     } 
@@ -853,8 +836,9 @@ public class RegisterAllocator {
 
     public TempNode findTempNode(int index) {
         for(TempNode node : tempnodes) {
-            if(node.getVariable().getSSA().getIndex() == index)
+            if(node.getVariable().getSSA().getIndex() == index) {
                 return node;
+            }
         }
         return null;
     }
@@ -867,8 +851,9 @@ public class RegisterAllocator {
                 oper = s.getOp();
                 if((oper == Op.NBranch) || (oper == Op.Branch) || (oper == Op.Goto)) {
                     String jumpsTo = (String)s.getSpecial();
-                    if(jumpsTo.equals(label))
+                    if(jumpsTo.equals(label)) {
                         set.add(node);
+                    }
                 }
             }
         }
@@ -882,8 +867,9 @@ public class RegisterAllocator {
                 oper = s.getOp();
                 if(oper == Op.Label) {
                     String jumpsTo = (String)s.getSpecial();
-                    if(jumpsTo.equals(label))
+                    if(jumpsTo.equals(label)){
                         set.add(node);
+                    }
                 }
             }
         }
@@ -915,21 +901,21 @@ public class RegisterAllocator {
             case Mul:            
             case Div:            
             case Mod:
-            left = ssa.getLeft();
-            right = ssa.getRight();
-            break;
+                left = ssa.getLeft();
+                right = ssa.getRight();
+                break;
             case IndexAssg:
-            left = ssa.getLeft();
-            right = ssa.getRight();
-            set.add(findVariable((SSAStatement)ssa.getSpecial()));
-            break;
+                left = ssa.getLeft();
+                right = ssa.getRight();
+                set.add(findVariable((SSAStatement)ssa.getSpecial()));
+                break;
             case Call:
-            left = ssa.getLeft();
-            SSACall call = (SSACall)ssa.getSpecial();
-            for(SSAStatement s: call.getArgs()) {
-                set.add(findVariable(s));
-            }
-            break;
+                left = ssa.getLeft();
+                SSACall call = (SSACall)ssa.getSpecial();
+                for(SSAStatement s: call.getArgs()) {
+                    set.add(findVariable(s));
+                }
+                break;
             case Member:
             case Not:
             case Arg:
@@ -942,17 +928,28 @@ public class RegisterAllocator {
             case Print:
             case Branch:
             case NBranch:
-            left = ssa.getLeft();              
-            break;
+                left = ssa.getLeft();              
+                break;
+            case NewObj:
+            case Int:
+            case Parameter:
+            case Null:
+            case This:
+            case Label:
+            case Goto:
+            case Boolean:
+                break;
             default:
-            break;
+                break;
 
         }
 
-        if(left != null) 
+        if(left != null) {
             set.add(findVariable(left));
-        if(right != null)
+        }
+        if(right != null) {
             set.add(findVariable(right));
+        }
     }
 
     public void fillUses(CFNode node) {
@@ -1000,8 +997,9 @@ public class RegisterAllocator {
             findLabelSucc(label, set);
         }
 
-        if(!isGotoPred(pred, prevIndex))
+        if(!isGotoPred(pred, prevIndex)){
             set.add(pred);
+        }
         
         return;
     }
@@ -1018,8 +1016,9 @@ public class RegisterAllocator {
         }
         
         // Gotos don't have a successor at goto's index + 1;
-        if(oper != Op.Goto)
+        if(oper != Op.Goto){
             set.add(succ);
+        }
         
         return;
     }
@@ -1027,8 +1026,9 @@ public class RegisterAllocator {
     // isX functions
     public boolean isGotoPred(CFNode pred, int index) {
         for(SSAStatement s : pred.getVariable().getUnifedSSA()) {
-            if(s.getIndex() == index && s.getOp() == Op.Goto)
+            if(s.getIndex() == index && s.getOp() == Op.Goto){
                 return true; 
+            }
         }
         return false;
     }
