@@ -555,93 +555,51 @@ public class RegisterAllocator {
         }
     }
     public void liveness() {
-        boolean change1, change2, change3, change4;
-        change1 = change2 = change3 = change4 = true;
-        while(change1 || change2 || change3 || change4){
-            change1 = change2 = change3 = change4 = false;
+        boolean change1, change2, change3, change4, changed;
+        changed = change1 = change2 = change3 = change4 = true;
+        while(changed){
+            changed = change1 = change2 = change3 = change4 = false;
             CFNode node;
             Set<Variable> out, in, def, use, succIn;
             Set<CFNode> succ;
-            int size, index;
+            int size;
             Variable var;
             SSAStatement ssa;
-            Set<Integer> done;
-            HashMap<Integer, Set<Integer>> todo;
-
-            todo = new HashMap<Integer, Set<Integer>>();
-            done = new HashSet<Integer>();
             size = block.size();
 
             for(int i =  size - 1; i > -1; i--) {
                 // For each ssastatement find it's cfnode, then get it's out and int 
 
                 ssa = block.get(i);
-
                 node = findCFNode(ssa);
-                index = ssa.getIndex();
                 out = node.getSet("out");
                 in = node.getSet("in");
                 def = node.getSet("def");
                 use = node.getSet("use");
                 succ = node.getPredSucc("succ");
 
-                //System.out.println("Statement " + ssa.getIndex() + " analysis: " + ssa);
-
-              // System.out.println(node);
-                
-                
+                //System.out.println("Statement " + ssa.getIndex() + " analysis: " + ssa);                
                 // if it's not the first node being analyzed
-                if(succ != null) { 
-                    for(CFNode n : succ) {
-                        int succSSA = n.getSSA().getIndex();
-                        // if the successor isn't done yet, put it in the todo
-                        if(!done.contains(succSSA)) {
-                            Set<Integer> todoSet;
-                            if(!todo.containsKey(succSSA)) {
-                                todoSet = new HashSet<Integer>();
-                                todoSet.add(i);
-
-                            } else {
-                                todoSet = todo.get(succSSA);
-                                todoSet.add(i);
-                            }
-                          //  System.out.println("Added " + i + " waiting for " + succSSA);
-                            todo.put(succSSA, todoSet);
-                            continue;
-                        }
-
-                        //System.out.println("Succ:" + succSSA);
-                        //System.out.println(findCFNode(succSSA));
-
-                        succIn = findCFNode(succSSA).getSet("in");
-                        change1 = out.addAll(succIn);
-                    }
+                for(CFNode n : succ) {
+                    int succSSA = n.getSSA().getIndex();
+                    //System.out.println("Succ:" + succSSA);
+                    //System.out.println(findCFNode(succSSA));
+                    succIn = findCFNode(succSSA).getSet("in");
+                    change1 = out.addAll(succIn);
                 }
-                 for(Variable v : def)
-                   change2 = out.add(v);
+
+                change2 = out.addAll(def);
+                
                 for(Variable v : out) {
                     if(!def.contains(v)) 
                         change3 = in.add(v);
                 }
 
                 change4 = in.addAll(use);
-
-                done.add(index);
-
-                if(todo.containsKey(index)) {
-                 //   System.out.println("Finally Finished " + index);
-                    int max = i;
-                    for(Integer predInt : todo.get(index)) { 
-                    //System.out.println("Pred Int is " + predInt);   
-                        if(predInt > max) 
-                            max = predInt;
-                    }
-                    todo.remove(index);
-                    // max + 1 because the loop will do a i--
-                    i = max + 1;
-                    //System.out.println("Going back to " + i);
-                }
                 
+                if((changed == false) && (change1 || change2 || change3 || change4)) {
+                    changed = true;
+                }
               /*  System.out.println("----------------------------");
                 System.out.println("Out");
                 for(Variable v : out) {
