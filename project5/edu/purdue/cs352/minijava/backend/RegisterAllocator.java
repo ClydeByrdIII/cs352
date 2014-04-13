@@ -219,10 +219,6 @@ public class RegisterAllocator {
             return master.contains(ssa);
         }
 
-        public boolean isLive(TempNode temp) {
-            return live.contains(temp);
-        }
-
         public void setColor(int color) {
             this.color = color;
         }
@@ -288,15 +284,14 @@ public class RegisterAllocator {
              TempNode greater = null;
               for(TempNode i : adj.keySet()){
                 if(i.isRemoved() || i.isPinned()) continue;
-                 if(this.getDegree(i) < k) {
-                     return i;
-                 } else {
-                     greater = i;
-                  }
+                    if(this.getDegree(i) < k) {
+                        return i;
+                    } else {
+                        greater = i;
+                    }
             
-              }
+                }
             return greater;
-
         }
 
         public TempNode findMinNode() {
@@ -342,7 +337,6 @@ public class RegisterAllocator {
         }
 
         public void remove(TempNode temp) {
-            
             temp.setRemoved(true);
             size--;
             if(!temp.isPinned() && !temp.isRemoved()){
@@ -350,19 +344,15 @@ public class RegisterAllocator {
             }       
             
         }  
+
         public int findColor(TempNode temp , int registers) {
 
             Set<TempNode> set = this.getNeighbors(temp);
             Set<Integer> colors = new HashSet<Integer>();
-            //System.out.println("Computing color for: " + temp + " color is " + temp.getColor());
 
             for(TempNode node : set) {
-
-                //System.out.println("Neighbor:");
-                //System.out.println(node.getVariable().getSSA() + " color is " + node.getColor());
                 if(node.isRemoved()) continue;
                 int neighborColor = node.getColor();
-
                 colors.add(neighborColor);
             }
 
@@ -371,13 +361,13 @@ public class RegisterAllocator {
                     return i;
                 }
             }
-            //System.out.println("Bad Color is now " + -1);
             return -1;
         }
 
         public int size() {
             return size;
         }
+
         public boolean isEmpty() {
             if(size > 0) return false;
             return true;
@@ -420,7 +410,6 @@ public class RegisterAllocator {
         stack = new ArrayDeque<TempNode>();
         interference = new Graph();
         potentialSpills = new ArrayList<TempNode>();
-
         numOfSpills = 0;
 
     }
@@ -453,7 +442,7 @@ public class RegisterAllocator {
         //System.out.println("New Method");
         RegisterAllocator ra = new RegisterAllocator();
         ra.block = block;
-       // int i = 0;
+      
         while (true) {
             /* FILLIN: This body may work fine, in which case you will have to
              * write the relevant functions, or you may prefer to implement it
@@ -489,7 +478,6 @@ public class RegisterAllocator {
             actualSpills = ra.select(freeRegisters);
             if (actualSpills.size() == 0) break;
 
-            //if(i++ == 1) break;
             // OK, rewrite  to perform the spills
             ra.performSpills(actualSpills);
         }
@@ -523,7 +511,6 @@ public class RegisterAllocator {
 
             // delete unified variables individual objects
         for(Variable var : toRemove) {
-                // remove the variable from the list
             variables.remove(var);
         }
 
@@ -749,11 +736,10 @@ public class RegisterAllocator {
 
             for(int i = 0; i < block.size(); i++) {
                 SSAStatement stat = block.get(i);
-                if(sup.contains(stat)){ } else {
+                if(sup.contains(stat))continue;
                     checkStore(spill, stat, i, sup);
                     checkLoad(spill, stat, i , sup);
                 //System.out.println(findCFNode(stat));
-                }
             }
             numOfSpills++;
         }
@@ -979,9 +965,11 @@ public class RegisterAllocator {
         CFNode succPred;
         SSAStatement ssa;
         int prevSSA, nextSSA;
+
         int firstBlockIndex = block.get(0).getIndex();
         int lastBlockIndex = block.get(block.size()-1).getIndex();
         ssa = node.getSSA();
+
         if(firstBlockIndex != ssa.getIndex()) {
             prevSSA = (block.get(block.indexOf(ssa)-1)).getIndex();
         } else {
@@ -994,8 +982,6 @@ public class RegisterAllocator {
             nextSSA = -1;
         }
     
-        
-     
         succPred = findCFNode(prevSSA);
         if( succPred != null) {
             set = node.getPredSucc("pred");
