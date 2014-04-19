@@ -4,6 +4,8 @@ import java.util.*;
 
 import edu.purdue.cs352.minijava.ssa.*;
 import edu.purdue.cs352.minijava.types.*;
+import static edu.purdue.cs352.minijava.backend.ClassLayout.*;
+import static edu.purdue.cs352.minijava.ssa.SSAStatement.*;
 
 public class AsmMIPS {
     StringBuilder sb;
@@ -121,6 +123,10 @@ public class AsmMIPS {
         sb.append("mj__v_" + cl.getASTNode().getName() + ":\n");
         // FILLIN
 
+        Vtable table = ClassLayout.getVtable(prog, cl);
+        for(String method : table.methods) {
+            sb.append(" .word mj__m_" + cl.getASTNode().getName() + "_" + method + "\n");
+        }
         // now compile the actual methods
         sb.append(".text\n");
         for (SSAMethod m : cl.getMethodsOrdered()) {
@@ -158,22 +164,41 @@ public class AsmMIPS {
         }
 
         // FILLIN: perform register allocation
-
+        RegisterAllocator.alloc(m, freeRegisters.length);
         // FILLIN: figure out how much space we need to reserve for spills
         int spillSpace = 0;
-
+        spillSpace += findMax(m.getBody());
         // FILLIN: and perhaps any other space we need to reserve (saved registers?)
+        List<Integer> used = new ArrayList<Integer>();
+        for(SSAStatement s : m.getBody()) {
+
+            if(!used.contains(freeReg(s)) && (Arrays.binarySearch(freeRegisters, freeReg(s)) > -1)){
+                used.add(freeReg(s));
+                spillSpace++;
+            }
+        }
+
+        if(!used.contains(31))spillSpace++;
+        if(!used.contains(2))spillSpace++;
+        if(!used.contains(3))spillSpace++;
 
         // FILLIN: reserve space
         sb.append(" add $sp, $sp, -");
-        sb.append(wordSize*(/*FILLIN*/));
+        sb.append(wordSize*(spillSpace));
         sb.append("\n");
 
         // FILLIN: save the callee-saved registers, anything else that needs to be saved
-
+        int offsetS = 0;
+        for(SSAStatement s : m.getBody()) {
+            if(Arrays.binarySearch(calleeSavedRegisters, s.getRegister()) > -1){
+               sb.append(" sw $");
+               sb.append(reg(s));
+               sb.append(", -" + (++offsetS)*wordSize + "($fp)");
+            }
+        }
         // now write the code
         for (SSAStatement s : m.getBody()) {
-            compile(prog, name, s);
+            //compile(prog, name, s);
         }
 
         // the epilogue starts here
@@ -182,7 +207,14 @@ public class AsmMIPS {
         sb.append(":\n");
 
         // FILLIN: restore the callee-saved registers (anything else?)
-
+        offsetS = 0;
+        for(SSAStatement s : m.getBody()) {
+            if(Arrays.binarySearch(calleeSavedRegisters, s.getRegister()) > -1){
+               sb.append(" lw $");
+               sb.append(reg(s));
+               sb.append(", -" + (++offsetS)*wordSize + "($fp)");
+            }
+        }
         // and the rest of the epilogue
         sb.append(" move $sp, $fp\n");
         sb.append(" lw $fp, ($sp)\n");
@@ -204,12 +236,114 @@ public class AsmMIPS {
 
         switch (s.getOp()) {
             // FILLIN (this is the actual code generator!)
-
+            case Unify:
+            case Alias:
+            case Parameter: 
+                break; // Do nothing
+            case Int:
+            
+                break;
+            case Print:
+              
+                break;
+            case Boolean:
+               
+                break;
+            case This:
+               
+                break;
+            case Arg:
+               
+                break;
+            case Null:
+               
+                break;
+            case NewObj:
+               
+                break;
+            case NewIntArray:
+               
+                break;
+            case Label:
+            case Goto:
+                
+                break;
+            case Branch:
+            case NBranch:
+               
+                break;
+            case Call:
+                
+                
+                break;
+            case Return:
+               
+                break;
+            case Member:
+               
+                break;
+            case Index:
+               
+                break;
+            case VarAssg:
+                
+                break;
+            case MemberAssg:
+                
+                break;
+            case IndexAssg:
+               
+                break;
+            case Not:
+               
+                break;
+            case Eq:             
+            case Ne:
+               
+                break;
+            case Lt:
+            case Le:         
+            case Gt:
+            case Ge:
+                
+                break;
+            case And:
+            case Or:
+               
+                break;
+            case Plus:           
+            case Minus:          
+            case Mul:            
+            case Div:            
+            case Mod:
+               
+                break;
             default:
                 throw new Error("Implement MIPS compiler for " + s.getOp() + "!");
         }
     }
+    // utility method to get the register name for a given statement
+    private String reg(SSAStatement s) {
+        return registers[freeRegisters[s.getRegister()]];
+    }
 
+    // utility method to get the register name for a given statement
+    private int freeReg(SSAStatement s) {
+        return freeRegisters[s.getRegister()];
+    }
+
+
+    public int findMax(List<SSAStatement> body) {
+        int max = 0;
+        for(SSAStatement s: body) {
+            if(s.getOp() == Op.Store) {
+                int offset = (Integer) s.getSpecial();
+                if(offset > max) 
+                    max = offset;
+            }
+        }
+        return max;
+    }
     // get the actual code generated
     public String toString() {
         return sb.toString();
