@@ -135,6 +135,12 @@ public class AsmMIPS {
         }
     }
 
+    List<Integer> crsaved = new ArrayList<Integer>();
+    List<Integer> cesaved = new ArrayList<Integer>();
+    StringBuilder cestores = new StringBuilder();
+    StringBuilder celoads = new StringBuilder();
+    StringBuilder crstores = new StringBuilder();
+    StringBuilder crloads = new StringBuilder();
     // compile this method with this name
     private void compile(SSAProgram prog, SSAMethod m, String name) {
         // beginning of the prologue
@@ -169,36 +175,59 @@ public class AsmMIPS {
         int spillSpace = 0;
         spillSpace += findMax(m.getBody());
         // FILLIN: and perhaps any other space we need to reserve (saved registers?)
-        List<Integer> used = new ArrayList<Integer>();
+        
+        // Add space for v0 and v1 if not already
+        crsaved.add(callerSavedRegisters[0]);
+        crsaved.add(callerSavedRegisters[1]);
+        
         for(SSAStatement s : m.getBody()) {
-
-            if(!used.contains(freeReg(s)) && (Arrays.binarySearch(freeRegisters, freeReg(s)) > -1)){
-                used.add(freeReg(s));
-                spillSpace++;
+            if(!crsaved.contains(freeReg(s)) && (Arrays.binarySearch(callerSavedRegisters, freeReg(s)) > -1)){
+                crsaved.add(freeReg(s));
+            } else if (!cesaved.contains(freeReg(s)) && Arrays.binarySearch(calleeSavedRegisters, freeReg(s)) > -1){
+               cesaved.add(freeReg(s)); 
             }
         }
 
-        if(!used.contains(31))spillSpace++;
-        if(!used.contains(2))spillSpace++;
-        if(!used.contains(3))spillSpace++;
-
         // FILLIN: reserve space
+        spillSpace+= crsaved.size();
+
         sb.append(" add $sp, $sp, -");
         sb.append(wordSize*(spillSpace));
         sb.append("\n");
+        // reserve $ra space
+        sb.append(" add $sp, $sp, -");
+        sb.append(wordSize);
+        sb.append("\n");
 
-        // FILLIN: save the callee-saved registers, anything else that needs to be saved
+        
         int offsetS = 0;
-        for(SSAStatement s : m.getBody()) {
-            if(Arrays.binarySearch(calleeSavedRegisters, s.getRegister()) > -1){
-               sb.append(" sw $");
-               sb.append(reg(s));
-               sb.append(", -" + (++offsetS)*wordSize + "($fp)");
-            }
+        for(Integer reg : cesaved) {
+               cestores.append(" sw $");
+               cestores.append(registers[reg]);
+               cestores.append(", -" + (++offsetS)*wordSize + "($sp)\n");
+               celoads.append(" lw $");
+               celoads.append(registers[reg]);
+               celoads.append(", -" + (offsetS)*wordSize + "($sp)\n");
         }
+
+        int offsetR = 0;
+        for(Integer reg : crsaved) {
+               crstores.append(" sw $");
+               crstores.append(registers[reg]);
+               crstores.append(", -" + (++offsetR)*wordSize + "($fp)\n");
+               crloads.append(" lw $");
+               crloads.append(registers[reg]);
+               crloads.append(", -" + (offsetR)*wordSize + "($fp)\n");
+        }
+
+        // FILLIN: save the callee-saved registers, anything else that needs to be callee-saved
+        sb.append(" sw $");
+        sb.append(registers[31]);
+        sb.append(", ($sp)\n");
+        sb.append(cestores);
         // now write the code
         for (SSAStatement s : m.getBody()) {
-            //compile(prog, name, s);
+            compile(prog, name, s);
         }
 
         // the epilogue starts here
@@ -207,14 +236,11 @@ public class AsmMIPS {
         sb.append(":\n");
 
         // FILLIN: restore the callee-saved registers (anything else?)
-        offsetS = 0;
-        for(SSAStatement s : m.getBody()) {
-            if(Arrays.binarySearch(calleeSavedRegisters, s.getRegister()) > -1){
-               sb.append(" lw $");
-               sb.append(reg(s));
-               sb.append(", -" + (++offsetS)*wordSize + "($fp)");
-            }
-        }
+        sb.append(celoads);
+        sb.append(" lw $");
+        sb.append(registers[31]);
+        sb.append(", ($sp)\n");
+        sb.append(" add $sp, $sp, " + wordSize*(offsetS+1) + "\n");
         // and the rest of the epilogue
         sb.append(" move $sp, $fp\n");
         sb.append(" lw $fp, ($sp)\n");
@@ -222,6 +248,13 @@ public class AsmMIPS {
         sb.append(wordSize);
         sb.append("\n");
         sb.append(" j $ra\n");
+
+        cesaved.clear();
+        crsaved.clear();
+        cestores.setLength(0);
+        celoads.setLength(0);
+        crstores.setLength(0);
+        crloads.setLength(0);
     }
 
     // compile this statement (FILLIN: might need more registers, coming from above method)
@@ -234,6 +267,13 @@ public class AsmMIPS {
         sb.append(s.toString());
         sb.append("\n");
 
+        SSAStatement left, right;
+        String special;
+        StringBuilder built = new StringBuilder();
+
+        left = s.getLeft();
+        right = s.getRight();
+
         switch (s.getOp()) {
             // FILLIN (this is the actual code generator!)
             case Unify:
@@ -241,43 +281,69 @@ public class AsmMIPS {
             case Parameter: 
                 break; // Do nothing
             case Int:
-            
+                int intValue = (Integer)s.getSpecial();
+                built.append(" li $" + reg(s) + ", " + intValue + "\n");
                 break;
             case Print:
-              
+                built.append(crstores);
+                built.append(" jal minijavaPrint\n");
+                built.append(crloads);
                 break;
             case Boolean:
-               
+                boolean boolValue = (Boolean)s.getSpecial();
+                if(boolValue) {
+                    built.append(" li $" + reg(s) + ", " + 1 + "\n");
+                } else {
+                    built.append(" move $" + reg(s) + ", $zero\n");
+                }
                 break;
             case This:
-               
+                built.append(" move $" + reg(s) + ", $v0\n");
                 break;
             case Arg:
-               
+                int argPos = (Integer)s.getSpecial();
+                if(argPos > 3) {
+                    built.append("sw $" + reg(s) + (argPos-4)*wordSize + "($sp)\n");   
+                }
                 break;
             case Null:
-               
+                built.append(" move $" + reg(s) + ", $zero\n");
                 break;
             case NewObj:
                
                 break;
             case NewIntArray:
-               
+                built.append(crstores);
+                if(!reg(left).equals("a0")) {
+                    built.append(" move $a0, $" + reg(left));
+                }
+                built.append(" jal minijavaNewArray\n");
+                built.append(" move $a0, $v0\n");
+                built.append(crloads);
                 break;
             case Label:
+                special = (String)s.getSpecial();
+                built.append("."+special + "\n");
+                break;
             case Goto:
-                
+                special = (String)s.getSpecial();
+                built.append("j ."+special + "\n");
                 break;
             case Branch:
+                special = (String)s.getSpecial();
+                built.append(" bne $" + reg(s) + ", $zero ." + special +"\n");
+                break;
             case NBranch:
-               
+            // could change to beqz
+                special = (String)s.getSpecial();
+                built.append(" beq $" + reg(s) + ", $zero, ." + special +"\n");
                 break;
             case Call:
                 
                 
                 break;
             case Return:
-               
+                built.append(" move $" + reg(s) + ", $" + reg(left) + "\n");
                 break;
             case Member:
                
@@ -286,7 +352,9 @@ public class AsmMIPS {
                
                 break;
             case VarAssg:
-                
+                if(!reg(s).equals(reg(left))) {
+                    built.append(" move $" + reg(s) + ", $" + reg(left)+ "\n");
+                }
                 break;
             case MemberAssg:
                 
@@ -295,32 +363,58 @@ public class AsmMIPS {
                
                 break;
             case Not:
-               
+                 built.append(" seq $" + reg(s) + ", $zero , $" + reg(left) + "\n");
                 break;
-            case Eq:             
+            case Eq:
+                built.append(" seq $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                break;             
             case Ne:
-               
+                built.append(" sne $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
                 break;
             case Lt:
-            case Le:         
+                built.append(" slt $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                break;
+            case Le:
+                built.append(" sle $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                break;       
             case Gt:
+                built.append(" sgt $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                break;
             case Ge:
-                
+                built.append(" sge $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
                 break;
             case And:
-            case Or:
-               
+                built.append(" add $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                built.append(" seq $" + reg(s) + ", $" + reg(s) + ", 2\n");
                 break;
-            case Plus:           
-            case Minus:          
-            case Mul:            
-            case Div:            
+            case Or:
+                built.append(" add $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                built.append(" sgt $" + reg(s) + ", $" + reg(s) + ", 0\n");
+                break;
+            case Plus:
+                built.append(" add $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                break;           
+            case Minus:
+                built.append(" sub $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                break;          
+            case Mul:
+                built.append(" mul $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
+                break;            
+            case Div: 
+                // can change this to one liner after verifying it works
+                built.append(" div $" + reg(left) + ", $" + reg(right) + "\n");
+                built.append(" mflo $" + reg(s) + "\n");
+                break;           
             case Mod:
-               
+                // can change to one liner
+                built.append(" div $" + reg(left) + ", $" + reg(right) + "\n");
+                built.append(" mfhi $" + reg(s) + "\n");
                 break;
             default:
                 throw new Error("Implement MIPS compiler for " + s.getOp() + "!");
         }
+
+        sb.append(built);
     }
     // utility method to get the register name for a given statement
     private String reg(SSAStatement s) {
