@@ -7,21 +7,16 @@ class Factorial{
 class Fac {
 
     public int ComputeFac(int num){
-	int[] i;
 	int x;
 	int y;
-	int z;
-	int f;
-	int a;
-	int b;
-	this;
-	x =30;
-	y = x+ 20;
-	z = x + y + 40;
-	a = x+ y+ z + 50;
-	b = a + x +y + z + 60;
-	i = new int[z];
 
+	x = 10 % num;
+	y = 5  % num;
+	System.out.println(x);
+	System.out.println(y);
+	System.out.println(13 % num);
+	System.out.println(100 % num);
+	System.out.println(500213 % 57);
 	return 0;
     }
 

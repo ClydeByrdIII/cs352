@@ -105,7 +105,7 @@ public class ClassLayout {
     // get the size of the vtable for a class
     public static int vtableSize(SSAProgram prog, SSAClass cl) {
         // FILLIN
-        return vtables.get(cl).methods.size();
+        return getVtable(prog,cl).methods.size();
     }
 
     // for a given method, get the implementing class
