@@ -282,7 +282,7 @@ public class AsmMIPS {
             case Parameter:
                 int paramPos = (Integer)s.getSpecial();
                 if(paramPos > 3) {
-                    built.append("lw $" + reg(s) + ", " + (paramPos-3)*wordSize + "($fp)\n");   
+                    built.append(" lw $" + reg(s) + ", " + (paramPos-3)*wordSize + "($fp)\n");   
                 }
                 break; 
             case Int:
@@ -310,7 +310,7 @@ public class AsmMIPS {
             case Arg:
                 int argPos = (Integer)s.getSpecial();
                 if(argPos > 3) {
-                    built.append("sw $" + reg(left) + ", " + (argPos-4)*wordSize + "($sp)\n");   
+                    built.append(" sw $" + reg(left) + ", " + (argPos-4)*wordSize + "($sp)\n");   
                 } else {
                     built.append(moveRegister(reg(s) ,reg(left)));
                 }
