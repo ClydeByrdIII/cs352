@@ -375,7 +375,6 @@ public class AsmMIPS {
             case Member:
                 special = (String)s.getSpecial();
                 String clname = left.getType().toString();
-                //System.out.println("Name is "+ clname + " field is " + special +  " is null " + (prog.getClass(clname) == null));
                 int memOffset;
                 if(clname.equals("int[]")) {
                     memOffset = 0;
@@ -421,7 +420,7 @@ public class AsmMIPS {
                 built.append(" sne $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
                 break;
             case Lt:
-                built.append(" slt $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n"); /* TODO FIX/ add newline */
+                built.append(" slt $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
                 break;
             case Le:
                 built.append(" sle $" + reg(s) + ", $" + reg(left) + ", $" + reg(right) + "\n");
