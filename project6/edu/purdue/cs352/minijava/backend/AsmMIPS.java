@@ -401,6 +401,7 @@ public class AsmMIPS {
                 String className = left.getType().toString();
                 int memSOffset = fieldOffset(prog, prog.getClass(className), special);
                 built.append(" sw $" + reg(right) + ", " + (memSOffset*wordSize) + "($" + reg(left) + ")\n");
+                built.append(moveRegister(reg(s), reg(right)));
                 break;
             case IndexAssg:
                 SSAStatement index = (SSAStatement)s.getSpecial();
@@ -408,7 +409,7 @@ public class AsmMIPS {
                 built.append(" add $v1, $v1, 4\n");
                 built.append(" add $v1, $v1, $" + reg(left) + "\n");
                 built.append(" sw $" + reg(right) + ", ($v1)\n");
-                built.append(" move $" + reg(s) + ", $" + reg(right) + "\n");
+                built.append(moveRegister(reg(s), reg(right)));
                 break;
             case Not:
                  built.append(" seq $" + reg(s) + ", $zero , $" + reg(left) + "\n");

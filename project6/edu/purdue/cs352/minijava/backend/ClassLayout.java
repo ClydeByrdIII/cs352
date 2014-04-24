@@ -47,7 +47,6 @@ public class ClassLayout {
         int fieldOffset = 0;
         List<SSAClass> supers = getSuperClasses(prog, cl);
         SSAClass owner = getOwner(prog, cl, field);
-        Collections.reverse(supers);
   
             for(SSAClass sc : supers) {
                 if(sc == owner) {
