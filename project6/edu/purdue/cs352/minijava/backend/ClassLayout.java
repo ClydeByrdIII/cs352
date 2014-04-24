@@ -25,11 +25,11 @@ public class ClassLayout {
     public static int objectFields(SSAProgram prog, SSAClass cl) {
         // FILLIN
         int fields = 0;
-        List<SSAClass> supers = getSuperClasses(prog, cl);
+        SSAClass sc = cl.superclass(prog);
+        if(sc != null)
+            fields += (objectSize(prog, sc) - 1);
         fields += cl.getFieldsOrdered().size();
-        for(SSAClass sc : supers) {
-            fields+= sc.getFieldsOrdered().size();
-        }
+        
         //System.out.printf("SSAClass:%s Number of Fields:%d%n", cl.getASTNode().getName(), fields);
         return fields;
     }
@@ -47,17 +47,13 @@ public class ClassLayout {
         int fieldOffset = 0;
         List<SSAClass> supers = getSuperClasses(prog, cl);
         SSAClass owner = getOwner(prog, cl, field);
-  
-            for(SSAClass sc : supers) {
-                if(sc == owner) {
-                    fieldOffset += (sc.getField(field).getIndex() + 1);
-                    break;
-                }
-                fieldOffset += sc.getFieldsOrdered().size();
-            }
-            if(cl == owner)
-                fieldOffset += (cl.getField(field).getIndex() + 1);
+        
+        SSAClass sc = owner.superclass(prog);
 
+        if(sc != null) 
+            fieldOffset += (objectFields(prog, sc));
+        
+        fieldOffset += (owner.getField(field).getIndex() + 1);
 
         //System.out.printf("SSAClass:%s Field:%s offset:%d owner: %s%n", cl.getASTNode().getName(), field, fieldOffset, owner.getASTNode().getName());
         return fieldOffset;
