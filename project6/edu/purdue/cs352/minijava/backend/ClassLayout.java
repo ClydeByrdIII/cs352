@@ -27,7 +27,7 @@ public class ClassLayout {
         int fields = 0;
         SSAClass sc = cl.superclass(prog);
         if(sc != null)
-            fields += (objectSize(prog, sc) - 1);
+            fields += (objectFields(prog, sc));
         fields += cl.getFieldsOrdered().size();
         
         //System.out.printf("SSAClass:%s Number of Fields:%d%n", cl.getASTNode().getName(), fields);
