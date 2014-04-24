@@ -47,7 +47,8 @@ public class ClassLayout {
         int fieldOffset = 0;
         List<SSAClass> supers = getSuperClasses(prog, cl);
         SSAClass owner = getOwner(prog, cl, field);
-        if(owner != cl) {
+        Collections.reverse(supers);
+  
             for(SSAClass sc : supers) {
                 if(sc == owner) {
                     fieldOffset += (sc.getField(field).getIndex() + 1);
@@ -55,11 +56,11 @@ public class ClassLayout {
                 }
                 fieldOffset += sc.getFieldsOrdered().size();
             }
-        } else {
-            fieldOffset += (cl.getField(field).getIndex() + 1);
-        }
+            if(cl == owner)
+                fieldOffset += (cl.getField(field).getIndex() + 1);
 
-        //System.out.printf("SSAClass:%s Field:%s offset:%d%n", cl.getASTNode().getName(), field, fieldOffset);
+
+        //System.out.printf("SSAClass:%s Field:%s offset:%d owner: %s%n", cl.getASTNode().getName(), field, fieldOffset, owner.getASTNode().getName());
         return fieldOffset;
     }
 
