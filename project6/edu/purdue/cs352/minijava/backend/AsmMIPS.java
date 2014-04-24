@@ -125,7 +125,7 @@ public class AsmMIPS {
 
         Vtable table = ClassLayout.getVtable(prog, cl);
         for(String method : table.methods) {
-            sb.append(" .word mj__m_" + cl.getASTNode().getName() + "_" + method + "\n");
+            sb.append(" .word mj__m_" + getImplementor(prog, cl, method).getASTNode().getName() + "_" + method + "\n");
         }
         // now compile the actual methods
         sb.append(".text\n");

@@ -90,12 +90,14 @@ public class ClassLayout {
         List<String> methods = new ArrayList<String>();
         for(SSAClass sup : supers) {
             for(SSAMethod method : sup.getMethodsOrdered()) {
-                methods.add(method.getMethod().getName());
+                if(!methods.contains(method.getMethod().getName()))
+                    methods.add(method.getMethod().getName());
             }
         }
 
         for(SSAMethod method : cl.getMethodsOrdered()) {
-            methods.add(method.getMethod().getName());
+            if(!methods.contains(method.getMethod().getName()))
+                methods.add(method.getMethod().getName());
         }
 
         Vtable table = new Vtable(methods);
