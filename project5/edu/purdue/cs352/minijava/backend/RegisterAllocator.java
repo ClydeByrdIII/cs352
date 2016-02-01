@@ -197,7 +197,7 @@ public class RegisterAllocator {
                     pinned = true;
                     color = s.getRegister();
                     pins.add(this);
-                    //System.out.println("Pinned nigga "+ s.getRegister() + " size " + var.getUnifedSSA().size());
+                    //System.out.println("Pinned "+ s.getRegister() + " size " + var.getUnifedSSA().size());
                     break;
                 }
             }
